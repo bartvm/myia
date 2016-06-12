@@ -232,7 +232,7 @@ if __name__ == "__main__":
     x = Array(np.ndarray, (3, 3), np.dtype('float64'), [], pool=pool)
 
     # Construct the comptuation graph
-    y, = add(x, x)
+    y, = add(x, transpose(x)[0])
 
     # Allocate data after creating graph so that memory refcount is correct
     x_data = np.random.rand(3, 3).data
