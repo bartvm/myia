@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <thread>
 #include "tbb/flow_graph.h"
-#include "TH/TH.h"
+#include "thpp/Tensor.h"
 #include <array>
 #include <tuple>
 
@@ -14,14 +14,14 @@ class Cadd {
   const std::array<bool, kNumInputs_> requires_gradient_;
   const std::array<bool, kNumInputs_> allow_inplace_;
  public:
-  typedef std::tuple<THDoubleTensor*, THDoubleTensor*> input_types_;
-  typedef std::tuple<THDoubleTensor*> output_types_;
+  typedef std::tuple<thpp::Tensor<double>*, thpp::Tensor<double>*> input_types_;
+  typedef std::tuple<thpp::Tensor<double>*> output_types_;
   Cadd(std::array<bool, kNumInputs_> requires_gradient,
        std::array<bool, kNumInputs_> allow_inplace)
     : requires_gradient_(requires_gradient), allow_inplace_(allow_inplace) {}
-  THDoubleTensor* operator()(input_types_ v) {
-    THDoubleTensor* result = THDoubleTensor_new();
-    THDoubleTensor_cadd(result, tbb::flow::get<0>(v), 1, tbb::flow::get<1>(v));
+  thpp::Tensor<double>* operator()(input_types_ v) {
+    thpp::Tensor<double>* result = new thpp::Tensor<double>();
+    result->cadd(*tbb::flow::get<0>(v), 1, *tbb::flow::get<1>(v));
     return result;
   }
 };
@@ -49,8 +49,8 @@ class ADNode {
 // A function that takes a series of input nodes and an op, which it then
 // schedules on the given graph
 template<class op>
-ADNode<THDoubleTensor*>* dispatch(
-    std::tuple<ADNode<THDoubleTensor*>*, ADNode<THDoubleTensor*>*> inputs,
+ADNode<thpp::Tensor<double>*>* dispatch(
+    std::tuple<ADNode<thpp::Tensor<double>*>*, ADNode<thpp::Tensor<double>*>*> inputs,
     std::array<bool, op::kNumInputs_> allow_inplace, tbb::flow::graph* g) {
   std::array<bool, op::kNumInputs_> requires_gradient;
   requires_gradient[0] = std::get<0>(inputs)->requires_gradient_;
@@ -74,34 +74,35 @@ ADNode<THDoubleTensor*>* dispatch(
   make_edge(*std::get<0>(inputs)->node_, tbb::flow::input_port<0>(*join));
   make_edge(*std::get<1>(inputs)->node_, tbb::flow::input_port<1>(*join));
 
-  ADNode<THDoubleTensor*>* ad_node = new ADNode<THDoubleTensor*>(std::any_of(requires_gradient.cbegin(), requires_gradient.cend(), [](bool x) {return x;}), write0);
+  ADNode<thpp::Tensor<double>*>* ad_node = new ADNode<thpp::Tensor<double>*>(std::any_of(requires_gradient.cbegin(), requires_gradient.cend(), [](bool x) {return x;}), write0);
 
   return ad_node;
 };
 
-ADNode<THDoubleTensor*>* create_node(tbb::flow::graph* g) {
-  THDoubleTensor* tensor = THDoubleTensor_newWithSize1d(10);
-  THDoubleStorage_fill(tensor->storage, 2);
+ADNode<thpp::Tensor<double>*>* create_node(tbb::flow::graph* g) {
+  thpp::Tensor<double>* tensor = new thpp::Tensor<double>();
+  tensor->resize({10});
+  tensor->fill(2);
   // Use new so that the nodes don't get destroyed at the end of the function
-  tbb::flow::broadcast_node<THDoubleTensor*>* input = new tbb::flow::broadcast_node<THDoubleTensor*>(*g);
-  tbb::flow::write_once_node<THDoubleTensor*>* node = new tbb::flow::write_once_node<THDoubleTensor*>(*g);
+  tbb::flow::broadcast_node<thpp::Tensor<double>*>* input = new tbb::flow::broadcast_node<thpp::Tensor<double>*>(*g);
+  tbb::flow::write_once_node<thpp::Tensor<double>*>* node = new tbb::flow::write_once_node<thpp::Tensor<double>*>(*g);
   make_edge(*input, *node);
   input->try_put(tensor);
-  ADNode<THDoubleTensor*>* ad_node = new ADNode<THDoubleTensor*>(true, node);
+  ADNode<thpp::Tensor<double>*>* ad_node = new ADNode<thpp::Tensor<double>*>(true, node);
   return ad_node;
 }
 
 int main() {
   tbb::flow::graph g;
-  ADNode<THDoubleTensor*>* ad_node1 = create_node(&g);
-  ADNode<THDoubleTensor*>* ad_node2 = create_node(&g);
+  ADNode<thpp::Tensor<double>*>* ad_node1 = create_node(&g);
+  ADNode<thpp::Tensor<double>*>* ad_node2 = create_node(&g);
   std::array<bool, 2> allow_inplace = {false, false};
-  ADNode<THDoubleTensor*>* adnode3 = dispatch<Cadd>(std::make_tuple(ad_node1, ad_node2), allow_inplace, &g);
+  ADNode<thpp::Tensor<double>*>* adnode3 = dispatch<Cadd>(std::make_tuple(ad_node1, ad_node2), allow_inplace, &g);
   printf("Got output node\n");
   printf("Graph done\n");
-  THDoubleTensor* tensor = adnode3->get();
+  thpp::Tensor<double>* tensor = adnode3->get();
   printf("Got result\n");
-  double* result(tensor->storage->data);
+  double* result(tensor->storage().data());
   printf("Final result is %f\n", *result);
   return 0;
 }
