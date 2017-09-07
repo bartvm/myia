@@ -1,0 +1,1764 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 1.5.5">
+<meta name="author" content="Bart van Merriënboer">
+<title>Myia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<style>
+/* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
+/* Remove comment around @import statement below when using as a custom stylesheet */
+/*@import "https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700";*/
+article,aside,details,figcaption,figure,footer,header,hgroup,main,nav,section,summary{display:block}
+audio,canvas,video{display:inline-block}
+audio:not([controls]){display:none;height:0}
+[hidden],template{display:none}
+script{display:none!important}
+html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}
+a{background:transparent}
+a:focus{outline:thin dotted}
+a:active,a:hover{outline:0}
+h1{font-size:2em;margin:.67em 0}
+abbr[title]{border-bottom:1px dotted}
+b,strong{font-weight:bold}
+dfn{font-style:italic}
+hr{-moz-box-sizing:content-box;box-sizing:content-box;height:0}
+mark{background:#ff0;color:#000}
+code,kbd,pre,samp{font-family:monospace;font-size:1em}
+pre{white-space:pre-wrap}
+q{quotes:"\201C" "\201D" "\2018" "\2019"}
+small{font-size:80%}
+sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}
+sup{top:-.5em}
+sub{bottom:-.25em}
+img{border:0}
+svg:not(:root){overflow:hidden}
+figure{margin:0}
+fieldset{border:1px solid silver;margin:0 2px;padding:.35em .625em .75em}
+legend{border:0;padding:0}
+button,input,select,textarea{font-family:inherit;font-size:100%;margin:0}
+button,input{line-height:normal}
+button,select{text-transform:none}
+button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer}
+button[disabled],html input[disabled]{cursor:default}
+input[type="checkbox"],input[type="radio"]{box-sizing:border-box;padding:0}
+input[type="search"]{-webkit-appearance:textfield;-moz-box-sizing:content-box;-webkit-box-sizing:content-box;box-sizing:content-box}
+input[type="search"]::-webkit-search-cancel-button,input[type="search"]::-webkit-search-decoration{-webkit-appearance:none}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0}
+textarea{overflow:auto;vertical-align:top}
+table{border-collapse:collapse;border-spacing:0}
+*,*:before,*:after{-moz-box-sizing:border-box;-webkit-box-sizing:border-box;box-sizing:border-box}
+html,body{font-size:100%}
+body{background:#fff;color:rgba(0,0,0,.8);padding:0;margin:0;font-family:"Noto Serif","DejaVu Serif",serif;font-weight:400;font-style:normal;line-height:1;position:relative;cursor:auto;tab-size:4;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}
+a:hover{cursor:pointer}
+img,object,embed{max-width:100%;height:auto}
+object,embed{height:100%}
+img{-ms-interpolation-mode:bicubic}
+.left{float:left!important}
+.right{float:right!important}
+.text-left{text-align:left!important}
+.text-right{text-align:right!important}
+.text-center{text-align:center!important}
+.text-justify{text-align:justify!important}
+.hide{display:none}
+img,object,svg{display:inline-block;vertical-align:middle}
+textarea{height:auto;min-height:50px}
+select{width:100%}
+.center{margin-left:auto;margin-right:auto}
+.spread{width:100%}
+p.lead,.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{font-size:1.21875em;line-height:1.6}
+.subheader,.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{line-height:1.45;color:#7a2518;font-weight:400;margin-top:0;margin-bottom:.25em}
+div,dl,dt,dd,ul,ol,li,h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6,pre,form,p,blockquote,th,td{margin:0;padding:0;direction:ltr}
+a{color:#2156a5;text-decoration:underline;line-height:inherit}
+a:hover,a:focus{color:#1d4b8f}
+a img{border:none}
+p{font-family:inherit;font-weight:400;font-size:1em;line-height:1.6;margin-bottom:1.25em;text-rendering:optimizeLegibility}
+p aside{font-size:.875em;line-height:1.35;font-style:italic}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{font-family:"Open Sans","DejaVu Sans",sans-serif;font-weight:300;font-style:normal;color:#ba3925;text-rendering:optimizeLegibility;margin-top:1em;margin-bottom:.5em;line-height:1.0125em}
+h1 small,h2 small,h3 small,#toctitle small,.sidebarblock>.content>.title small,h4 small,h5 small,h6 small{font-size:60%;color:#e99b8f;line-height:0}
+h1{font-size:2.125em}
+h2{font-size:1.6875em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.375em}
+h4,h5{font-size:1.125em}
+h6{font-size:1em}
+hr{border:solid #ddddd8;border-width:1px 0 0;clear:both;margin:1.25em 0 1.1875em;height:0}
+em,i{font-style:italic;line-height:inherit}
+strong,b{font-weight:bold;line-height:inherit}
+small{font-size:60%;line-height:inherit}
+code{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;color:rgba(0,0,0,.9)}
+ul,ol,dl{font-size:1em;line-height:1.6;margin-bottom:1.25em;list-style-position:outside;font-family:inherit}
+ul,ol,ul.no-bullet,ol.no-bullet{margin-left:1.5em}
+ul li ul,ul li ol{margin-left:1.25em;margin-bottom:0;font-size:1em}
+ul.square li ul,ul.circle li ul,ul.disc li ul{list-style:inherit}
+ul.square{list-style-type:square}
+ul.circle{list-style-type:circle}
+ul.disc{list-style-type:disc}
+ul.no-bullet{list-style:none}
+ol li ul,ol li ol{margin-left:1.25em;margin-bottom:0}
+dl dt{margin-bottom:.3125em;font-weight:bold}
+dl dd{margin-bottom:1.25em}
+abbr,acronym{text-transform:uppercase;font-size:90%;color:rgba(0,0,0,.8);border-bottom:1px dotted #ddd;cursor:help}
+abbr{text-transform:none}
+blockquote{margin:0 0 1.25em;padding:.5625em 1.25em 0 1.1875em;border-left:1px solid #ddd}
+blockquote cite{display:block;font-size:.9375em;color:rgba(0,0,0,.6)}
+blockquote cite:before{content:"\2014 \0020"}
+blockquote cite a,blockquote cite a:visited{color:rgba(0,0,0,.6)}
+blockquote,blockquote p{line-height:1.6;color:rgba(0,0,0,.85)}
+@media only screen and (min-width:768px){h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2}
+h1{font-size:2.75em}
+h2{font-size:2.3125em}
+h3,#toctitle,.sidebarblock>.content>.title{font-size:1.6875em}
+h4{font-size:1.4375em}}
+table{background:#fff;margin-bottom:1.25em;border:solid 1px #dedede}
+table thead,table tfoot{background:#f7f8f7;font-weight:bold}
+table thead tr th,table thead tr td,table tfoot tr th,table tfoot tr td{padding:.5em .625em .625em;font-size:inherit;color:rgba(0,0,0,.8);text-align:left}
+table tr th,table tr td{padding:.5625em .625em;font-size:inherit;color:rgba(0,0,0,.8)}
+table tr.even,table tr.alt,table tr:nth-of-type(even){background:#f8f8f7}
+table thead tr th,table tfoot tr th,table tbody tr td,table tr td,table tfoot tr td{display:table-cell;line-height:1.6}
+h1,h2,h3,#toctitle,.sidebarblock>.content>.title,h4,h5,h6{line-height:1.2;word-spacing:-.05em}
+h1 strong,h2 strong,h3 strong,#toctitle strong,.sidebarblock>.content>.title strong,h4 strong,h5 strong,h6 strong{font-weight:400}
+.clearfix:before,.clearfix:after,.float-group:before,.float-group:after{content:" ";display:table}
+.clearfix:after,.float-group:after{clear:both}
+*:not(pre)>code{font-size:.9375em;font-style:normal!important;letter-spacing:0;padding:.1em .5ex;word-spacing:-.15em;background-color:#f7f7f8;-webkit-border-radius:4px;border-radius:4px;line-height:1.45;text-rendering:optimizeSpeed;word-wrap:break-word}
+*:not(pre)>code.nobreak{word-wrap:normal}
+*:not(pre)>code.nowrap{white-space:nowrap}
+pre,pre>code{line-height:1.45;color:rgba(0,0,0,.9);font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;font-weight:400;text-rendering:optimizeSpeed}
+em em{font-style:normal}
+strong strong{font-weight:400}
+.keyseq{color:rgba(51,51,51,.8)}
+kbd{font-family:"Droid Sans Mono","DejaVu Sans Mono",monospace;display:inline-block;color:rgba(0,0,0,.8);font-size:.65em;line-height:1.45;background-color:#f7f7f7;border:1px solid #ccc;-webkit-border-radius:3px;border-radius:3px;-webkit-box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em white inset;box-shadow:0 1px 0 rgba(0,0,0,.2),0 0 0 .1em #fff inset;margin:0 .15em;padding:.2em .5em;vertical-align:middle;position:relative;top:-.1em;white-space:nowrap}
+.keyseq kbd:first-child{margin-left:0}
+.keyseq kbd:last-child{margin-right:0}
+.menuseq,.menu{color:rgba(0,0,0,.8)}
+b.button:before,b.button:after{position:relative;top:-1px;font-weight:400}
+b.button:before{content:"[";padding:0 3px 0 2px}
+b.button:after{content:"]";padding:0 2px 0 3px}
+p a>code:hover{color:rgba(0,0,0,.9)}
+#header,#content,#footnotes,#footer{width:100%;margin-left:auto;margin-right:auto;margin-top:0;margin-bottom:0;max-width:62.5em;*zoom:1;position:relative;padding-left:.9375em;padding-right:.9375em}
+#header:before,#header:after,#content:before,#content:after,#footnotes:before,#footnotes:after,#footer:before,#footer:after{content:" ";display:table}
+#header:after,#content:after,#footnotes:after,#footer:after{clear:both}
+#content{margin-top:1.25em}
+#content:before{content:none}
+#header>h1:first-child{color:rgba(0,0,0,.85);margin-top:2.25rem;margin-bottom:0}
+#header>h1:first-child+#toc{margin-top:8px;border-top:1px solid #ddddd8}
+#header>h1:only-child,body.toc2 #header>h1:nth-last-child(2){border-bottom:1px solid #ddddd8;padding-bottom:8px}
+#header .details{border-bottom:1px solid #ddddd8;line-height:1.45;padding-top:.25em;padding-bottom:.25em;padding-left:.25em;color:rgba(0,0,0,.6);display:-ms-flexbox;display:-webkit-flex;display:flex;-ms-flex-flow:row wrap;-webkit-flex-flow:row wrap;flex-flow:row wrap}
+#header .details span:first-child{margin-left:-.125em}
+#header .details span.email a{color:rgba(0,0,0,.85)}
+#header .details br{display:none}
+#header .details br+span:before{content:"\00a0\2013\00a0"}
+#header .details br+span.author:before{content:"\00a0\22c5\00a0";color:rgba(0,0,0,.85)}
+#header .details br+span#revremark:before{content:"\00a0|\00a0"}
+#header #revnumber{text-transform:capitalize}
+#header #revnumber:after{content:"\00a0"}
+#content>h1:first-child:not([class]){color:rgba(0,0,0,.85);border-bottom:1px solid #ddddd8;padding-bottom:8px;margin-top:0;padding-top:1rem;margin-bottom:1.25rem}
+#toc{border-bottom:1px solid #efefed;padding-bottom:.5em}
+#toc>ul{margin-left:.125em}
+#toc ul.sectlevel0>li>a{font-style:italic}
+#toc ul.sectlevel0 ul.sectlevel1{margin:.5em 0}
+#toc ul{font-family:"Open Sans","DejaVu Sans",sans-serif;list-style-type:none}
+#toc li{line-height:1.3334;margin-top:.3334em}
+#toc a{text-decoration:none}
+#toc a:active{text-decoration:underline}
+#toctitle{color:#7a2518;font-size:1.2em}
+@media only screen and (min-width:768px){#toctitle{font-size:1.375em}
+body.toc2{padding-left:15em;padding-right:0}
+#toc.toc2{margin-top:0!important;background-color:#f8f8f7;position:fixed;width:15em;left:0;top:0;border-right:1px solid #efefed;border-top-width:0!important;border-bottom-width:0!important;z-index:1000;padding:1.25em 1em;height:100%;overflow:auto}
+#toc.toc2 #toctitle{margin-top:0;margin-bottom:.8rem;font-size:1.2em}
+#toc.toc2>ul{font-size:.9em;margin-bottom:0}
+#toc.toc2 ul ul{margin-left:0;padding-left:1em}
+#toc.toc2 ul.sectlevel0 ul.sectlevel1{padding-left:0;margin-top:.5em;margin-bottom:.5em}
+body.toc2.toc-right{padding-left:0;padding-right:15em}
+body.toc2.toc-right #toc.toc2{border-right-width:0;border-left:1px solid #efefed;left:auto;right:0}}
+@media only screen and (min-width:1280px){body.toc2{padding-left:20em;padding-right:0}
+#toc.toc2{width:20em}
+#toc.toc2 #toctitle{font-size:1.375em}
+#toc.toc2>ul{font-size:.95em}
+#toc.toc2 ul ul{padding-left:1.25em}
+body.toc2.toc-right{padding-left:0;padding-right:20em}}
+#content #toc{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
+#content #toc>:first-child{margin-top:0}
+#content #toc>:last-child{margin-bottom:0}
+#footer{max-width:100%;background-color:rgba(0,0,0,.8);padding:1.25em}
+#footer-text{color:rgba(255,255,255,.8);line-height:1.44}
+.sect1{padding-bottom:.625em}
+@media only screen and (min-width:768px){.sect1{padding-bottom:1.25em}}
+.sect1+.sect1{border-top:1px solid #efefed}
+#content h1>a.anchor,h2>a.anchor,h3>a.anchor,#toctitle>a.anchor,.sidebarblock>.content>.title>a.anchor,h4>a.anchor,h5>a.anchor,h6>a.anchor{position:absolute;z-index:1001;width:1.5ex;margin-left:-1.5ex;display:block;text-decoration:none!important;visibility:hidden;text-align:center;font-weight:400}
+#content h1>a.anchor:before,h2>a.anchor:before,h3>a.anchor:before,#toctitle>a.anchor:before,.sidebarblock>.content>.title>a.anchor:before,h4>a.anchor:before,h5>a.anchor:before,h6>a.anchor:before{content:"\00A7";font-size:.85em;display:block;padding-top:.1em}
+#content h1:hover>a.anchor,#content h1>a.anchor:hover,h2:hover>a.anchor,h2>a.anchor:hover,h3:hover>a.anchor,#toctitle:hover>a.anchor,.sidebarblock>.content>.title:hover>a.anchor,h3>a.anchor:hover,#toctitle>a.anchor:hover,.sidebarblock>.content>.title>a.anchor:hover,h4:hover>a.anchor,h4>a.anchor:hover,h5:hover>a.anchor,h5>a.anchor:hover,h6:hover>a.anchor,h6>a.anchor:hover{visibility:visible}
+#content h1>a.link,h2>a.link,h3>a.link,#toctitle>a.link,.sidebarblock>.content>.title>a.link,h4>a.link,h5>a.link,h6>a.link{color:#ba3925;text-decoration:none}
+#content h1>a.link:hover,h2>a.link:hover,h3>a.link:hover,#toctitle>a.link:hover,.sidebarblock>.content>.title>a.link:hover,h4>a.link:hover,h5>a.link:hover,h6>a.link:hover{color:#a53221}
+.audioblock,.imageblock,.literalblock,.listingblock,.stemblock,.videoblock{margin-bottom:1.25em}
+.admonitionblock td.content>.title,.audioblock>.title,.exampleblock>.title,.imageblock>.title,.listingblock>.title,.literalblock>.title,.stemblock>.title,.openblock>.title,.paragraph>.title,.quoteblock>.title,table.tableblock>.title,.verseblock>.title,.videoblock>.title,.dlist>.title,.olist>.title,.ulist>.title,.qlist>.title,.hdlist>.title{text-rendering:optimizeLegibility;text-align:left;font-family:"Noto Serif","DejaVu Serif",serif;font-size:1rem;font-style:italic}
+table.tableblock>caption.title{white-space:nowrap;overflow:visible;max-width:0}
+.paragraph.lead>p,#preamble>.sectionbody>.paragraph:first-of-type p{color:rgba(0,0,0,.85)}
+table.tableblock #preamble>.sectionbody>.paragraph:first-of-type p{font-size:inherit}
+.admonitionblock>table{border-collapse:separate;border:0;background:none;width:100%}
+.admonitionblock>table td.icon{text-align:center;width:80px}
+.admonitionblock>table td.icon img{max-width:none}
+.admonitionblock>table td.icon .title{font-weight:bold;font-family:"Open Sans","DejaVu Sans",sans-serif;text-transform:uppercase}
+.admonitionblock>table td.content{padding-left:1.125em;padding-right:1.25em;border-left:1px solid #ddddd8;color:rgba(0,0,0,.6)}
+.admonitionblock>table td.content>:last-child>:last-child{margin-bottom:0}
+.exampleblock>.content{border-style:solid;border-width:1px;border-color:#e6e6e6;margin-bottom:1.25em;padding:1.25em;background:#fff;-webkit-border-radius:4px;border-radius:4px}
+.exampleblock>.content>:first-child{margin-top:0}
+.exampleblock>.content>:last-child{margin-bottom:0}
+.sidebarblock{border-style:solid;border-width:1px;border-color:#e0e0dc;margin-bottom:1.25em;padding:1.25em;background:#f8f8f7;-webkit-border-radius:4px;border-radius:4px}
+.sidebarblock>:first-child{margin-top:0}
+.sidebarblock>:last-child{margin-bottom:0}
+.sidebarblock>.content>.title{color:#7a2518;margin-top:0;text-align:center}
+.exampleblock>.content>:last-child>:last-child,.exampleblock>.content .olist>ol>li:last-child>:last-child,.exampleblock>.content .ulist>ul>li:last-child>:last-child,.exampleblock>.content .qlist>ol>li:last-child>:last-child,.sidebarblock>.content>:last-child>:last-child,.sidebarblock>.content .olist>ol>li:last-child>:last-child,.sidebarblock>.content .ulist>ul>li:last-child>:last-child,.sidebarblock>.content .qlist>ol>li:last-child>:last-child{margin-bottom:0}
+.literalblock pre,.listingblock pre:not(.highlight),.listingblock pre[class="highlight"],.listingblock pre[class^="highlight "],.listingblock pre.CodeRay,.listingblock pre.prettyprint{background:#f7f7f8}
+.sidebarblock .literalblock pre,.sidebarblock .listingblock pre:not(.highlight),.sidebarblock .listingblock pre[class="highlight"],.sidebarblock .listingblock pre[class^="highlight "],.sidebarblock .listingblock pre.CodeRay,.sidebarblock .listingblock pre.prettyprint{background:#f2f1f1}
+.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{-webkit-border-radius:4px;border-radius:4px;word-wrap:break-word;padding:1em;font-size:.8125em}
+.literalblock pre.nowrap,.literalblock pre[class].nowrap,.listingblock pre.nowrap,.listingblock pre[class].nowrap{overflow-x:auto;white-space:pre;word-wrap:normal}
+@media only screen and (min-width:768px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:.90625em}}
+@media only screen and (min-width:1280px){.literalblock pre,.literalblock pre[class],.listingblock pre,.listingblock pre[class]{font-size:1em}}
+.literalblock.output pre{color:#f7f7f8;background-color:rgba(0,0,0,.9)}
+.listingblock pre.highlightjs{padding:0}
+.listingblock pre.highlightjs>code{padding:1em;-webkit-border-radius:4px;border-radius:4px}
+.listingblock pre.prettyprint{border-width:0}
+.listingblock>.content{position:relative}
+.listingblock code[data-lang]:before{display:none;content:attr(data-lang);position:absolute;font-size:.75em;top:.425rem;right:.5rem;line-height:1;text-transform:uppercase;color:#999}
+.listingblock:hover code[data-lang]:before{display:block}
+.listingblock.terminal pre .command:before{content:attr(data-prompt);padding-right:.5em;color:#999}
+.listingblock.terminal pre .command:not([data-prompt]):before{content:"$"}
+table.pyhltable{border-collapse:separate;border:0;margin-bottom:0;background:none}
+table.pyhltable td{vertical-align:top;padding-top:0;padding-bottom:0;line-height:1.45}
+table.pyhltable td.code{padding-left:.75em;padding-right:0}
+pre.pygments .lineno,table.pyhltable td:not(.code){color:#999;padding-left:0;padding-right:.5em;border-right:1px solid #ddddd8}
+pre.pygments .lineno{display:inline-block;margin-right:.25em}
+table.pyhltable .linenodiv{background:none!important;padding-right:0!important}
+.quoteblock{margin:0 1em 1.25em 1.5em;display:table}
+.quoteblock>.title{margin-left:-1.5em;margin-bottom:.75em}
+.quoteblock blockquote,.quoteblock blockquote p{color:rgba(0,0,0,.85);font-size:1.15rem;line-height:1.75;word-spacing:.1em;letter-spacing:0;font-style:italic;text-align:justify}
+.quoteblock blockquote{margin:0;padding:0;border:0}
+.quoteblock blockquote:before{content:"\201c";float:left;font-size:2.75em;font-weight:bold;line-height:.6em;margin-left:-.6em;color:#7a2518;text-shadow:0 1px 2px rgba(0,0,0,.1)}
+.quoteblock blockquote>.paragraph:last-child p{margin-bottom:0}
+.quoteblock .attribution{margin-top:.5em;margin-right:.5ex;text-align:right}
+.quoteblock .quoteblock{margin-left:0;margin-right:0;padding:.5em 0;border-left:3px solid rgba(0,0,0,.6)}
+.quoteblock .quoteblock blockquote{padding:0 0 0 .75em}
+.quoteblock .quoteblock blockquote:before{display:none}
+.verseblock{margin:0 1em 1.25em 1em}
+.verseblock pre{font-family:"Open Sans","DejaVu Sans",sans;font-size:1.15rem;color:rgba(0,0,0,.85);font-weight:300;text-rendering:optimizeLegibility}
+.verseblock pre strong{font-weight:400}
+.verseblock .attribution{margin-top:1.25rem;margin-left:.5ex}
+.quoteblock .attribution,.verseblock .attribution{font-size:.9375em;line-height:1.45;font-style:italic}
+.quoteblock .attribution br,.verseblock .attribution br{display:none}
+.quoteblock .attribution cite,.verseblock .attribution cite{display:block;letter-spacing:-.025em;color:rgba(0,0,0,.6)}
+.quoteblock.abstract{margin:0 0 1.25em 0;display:block}
+.quoteblock.abstract blockquote,.quoteblock.abstract blockquote p{text-align:left;word-spacing:0}
+.quoteblock.abstract blockquote:before,.quoteblock.abstract blockquote p:first-of-type:before{display:none}
+table.tableblock{max-width:100%;border-collapse:separate}
+table.tableblock td>.paragraph:last-child p>p:last-child,table.tableblock th>p:last-child,table.tableblock td>p:last-child{margin-bottom:0}
+table.tableblock,th.tableblock,td.tableblock{border:0 solid #dedede}
+table.grid-all th.tableblock,table.grid-all td.tableblock{border-width:0 1px 1px 0}
+table.grid-all tfoot>tr>th.tableblock,table.grid-all tfoot>tr>td.tableblock{border-width:1px 1px 0 0}
+table.grid-cols th.tableblock,table.grid-cols td.tableblock{border-width:0 1px 0 0}
+table.grid-all *>tr>.tableblock:last-child,table.grid-cols *>tr>.tableblock:last-child{border-right-width:0}
+table.grid-rows th.tableblock,table.grid-rows td.tableblock{border-width:0 0 1px 0}
+table.grid-all tbody>tr:last-child>th.tableblock,table.grid-all tbody>tr:last-child>td.tableblock,table.grid-all thead:last-child>tr>th.tableblock,table.grid-rows tbody>tr:last-child>th.tableblock,table.grid-rows tbody>tr:last-child>td.tableblock,table.grid-rows thead:last-child>tr>th.tableblock{border-bottom-width:0}
+table.grid-rows tfoot>tr>th.tableblock,table.grid-rows tfoot>tr>td.tableblock{border-width:1px 0 0 0}
+table.frame-all{border-width:1px}
+table.frame-sides{border-width:0 1px}
+table.frame-topbot{border-width:1px 0}
+th.halign-left,td.halign-left{text-align:left}
+th.halign-right,td.halign-right{text-align:right}
+th.halign-center,td.halign-center{text-align:center}
+th.valign-top,td.valign-top{vertical-align:top}
+th.valign-bottom,td.valign-bottom{vertical-align:bottom}
+th.valign-middle,td.valign-middle{vertical-align:middle}
+table thead th,table tfoot th{font-weight:bold}
+tbody tr th{display:table-cell;line-height:1.6;background:#f7f8f7}
+tbody tr th,tbody tr th p,tfoot tr th,tfoot tr th p{color:rgba(0,0,0,.8);font-weight:bold}
+p.tableblock>code:only-child{background:none;padding:0}
+p.tableblock{font-size:1em}
+td>div.verse{white-space:pre}
+ol{margin-left:1.75em}
+ul li ol{margin-left:1.5em}
+dl dd{margin-left:1.125em}
+dl dd:last-child,dl dd:last-child>:last-child{margin-bottom:0}
+ol>li p,ul>li p,ul dd,ol dd,.olist .olist,.ulist .ulist,.ulist .olist,.olist .ulist{margin-bottom:.625em}
+ul.unstyled,ol.unnumbered,ul.checklist,ul.none{list-style-type:none}
+ul.unstyled,ol.unnumbered,ul.checklist{margin-left:.625em}
+ul.checklist li>p:first-child>.fa-square-o:first-child,ul.checklist li>p:first-child>.fa-check-square-o:first-child{width:1em;font-size:.85em}
+ul.checklist li>p:first-child>input[type="checkbox"]:first-child{width:1em;position:relative;top:1px}
+ul.inline{margin:0 auto .625em auto;margin-left:-1.375em;margin-right:0;padding:0;list-style:none;overflow:hidden}
+ul.inline>li{list-style:none;float:left;margin-left:1.375em;display:block}
+ul.inline>li>*{display:block}
+.unstyled dl dt{font-weight:400;font-style:normal}
+ol.arabic{list-style-type:decimal}
+ol.decimal{list-style-type:decimal-leading-zero}
+ol.loweralpha{list-style-type:lower-alpha}
+ol.upperalpha{list-style-type:upper-alpha}
+ol.lowerroman{list-style-type:lower-roman}
+ol.upperroman{list-style-type:upper-roman}
+ol.lowergreek{list-style-type:lower-greek}
+.hdlist>table,.colist>table{border:0;background:none}
+.hdlist>table>tbody>tr,.colist>table>tbody>tr{background:none}
+td.hdlist1,td.hdlist2{vertical-align:top;padding:0 .625em}
+td.hdlist1{font-weight:bold;padding-bottom:1.25em}
+.literalblock+.colist,.listingblock+.colist{margin-top:-.5em}
+.colist>table tr>td:first-of-type{padding:0 .75em;line-height:1}
+.colist>table tr>td:last-of-type{padding:.25em 0}
+.thumb,.th{line-height:0;display:inline-block;border:solid 4px #fff;-webkit-box-shadow:0 0 0 1px #ddd;box-shadow:0 0 0 1px #ddd}
+.imageblock.left,.imageblock[style*="float: left"]{margin:.25em .625em 1.25em 0}
+.imageblock.right,.imageblock[style*="float: right"]{margin:.25em 0 1.25em .625em}
+.imageblock>.title{margin-bottom:0}
+.imageblock.thumb,.imageblock.th{border-width:6px}
+.imageblock.thumb>.title,.imageblock.th>.title{padding:0 .125em}
+.image.left,.image.right{margin-top:.25em;margin-bottom:.25em;display:inline-block;line-height:0}
+.image.left{margin-right:.625em}
+.image.right{margin-left:.625em}
+a.image{text-decoration:none;display:inline-block}
+a.image object{pointer-events:none}
+sup.footnote,sup.footnoteref{font-size:.875em;position:static;vertical-align:super}
+sup.footnote a,sup.footnoteref a{text-decoration:none}
+sup.footnote a:active,sup.footnoteref a:active{text-decoration:underline}
+#footnotes{padding-top:.75em;padding-bottom:.75em;margin-bottom:.625em}
+#footnotes hr{width:20%;min-width:6.25em;margin:-.25em 0 .75em 0;border-width:1px 0 0 0}
+#footnotes .footnote{padding:0 .375em 0 .225em;line-height:1.3334;font-size:.875em;margin-left:1.2em;text-indent:-1.05em;margin-bottom:.2em}
+#footnotes .footnote a:first-of-type{font-weight:bold;text-decoration:none}
+#footnotes .footnote:last-of-type{margin-bottom:0}
+#content #footnotes{margin-top:-.625em;margin-bottom:0;padding:.75em 0}
+.gist .file-data>table{border:0;background:#fff;width:100%;margin-bottom:0}
+.gist .file-data>table td.line-data{width:99%}
+div.unbreakable{page-break-inside:avoid}
+.big{font-size:larger}
+.small{font-size:smaller}
+.underline{text-decoration:underline}
+.overline{text-decoration:overline}
+.line-through{text-decoration:line-through}
+.aqua{color:#00bfbf}
+.aqua-background{background-color:#00fafa}
+.black{color:#000}
+.black-background{background-color:#000}
+.blue{color:#0000bf}
+.blue-background{background-color:#0000fa}
+.fuchsia{color:#bf00bf}
+.fuchsia-background{background-color:#fa00fa}
+.gray{color:#606060}
+.gray-background{background-color:#7d7d7d}
+.green{color:#006000}
+.green-background{background-color:#007d00}
+.lime{color:#00bf00}
+.lime-background{background-color:#00fa00}
+.maroon{color:#600000}
+.maroon-background{background-color:#7d0000}
+.navy{color:#000060}
+.navy-background{background-color:#00007d}
+.olive{color:#606000}
+.olive-background{background-color:#7d7d00}
+.purple{color:#600060}
+.purple-background{background-color:#7d007d}
+.red{color:#bf0000}
+.red-background{background-color:#fa0000}
+.silver{color:#909090}
+.silver-background{background-color:#bcbcbc}
+.teal{color:#006060}
+.teal-background{background-color:#007d7d}
+.white{color:#bfbfbf}
+.white-background{background-color:#fafafa}
+.yellow{color:#bfbf00}
+.yellow-background{background-color:#fafa00}
+span.icon>.fa{cursor:default}
+.admonitionblock td.icon [class^="fa icon-"]{font-size:2.5em;text-shadow:1px 1px 2px rgba(0,0,0,.5);cursor:default}
+.admonitionblock td.icon .icon-note:before{content:"\f05a";color:#19407c}
+.admonitionblock td.icon .icon-tip:before{content:"\f0eb";text-shadow:1px 1px 2px rgba(155,155,0,.8);color:#111}
+.admonitionblock td.icon .icon-warning:before{content:"\f071";color:#bf6900}
+.admonitionblock td.icon .icon-caution:before{content:"\f06d";color:#bf3400}
+.admonitionblock td.icon .icon-important:before{content:"\f06a";color:#bf0000}
+.conum[data-value]{display:inline-block;color:#fff!important;background-color:rgba(0,0,0,.8);-webkit-border-radius:100px;border-radius:100px;text-align:center;font-size:.75em;width:1.67em;height:1.67em;line-height:1.67em;font-family:"Open Sans","DejaVu Sans",sans-serif;font-style:normal;font-weight:bold}
+.conum[data-value] *{color:#fff!important}
+.conum[data-value]+b{display:none}
+.conum[data-value]:after{content:attr(data-value)}
+pre .conum[data-value]{position:relative;top:-.125em}
+b.conum *{color:inherit!important}
+.conum:not([data-value]):empty{display:none}
+dt,th.tableblock,td.content,div.footnote{text-rendering:optimizeLegibility}
+h1,h2,p,td.content,span.alt{letter-spacing:-.01em}
+p strong,td.content strong,div.footnote strong{letter-spacing:-.005em}
+p,blockquote,dt,td.content,span.alt{font-size:1.0625rem}
+p{margin-bottom:1.25rem}
+.sidebarblock p,.sidebarblock dt,.sidebarblock td.content,p.tableblock{font-size:1em}
+.exampleblock>.content{background-color:#fffef7;border-color:#e0e0dc;-webkit-box-shadow:0 1px 4px #e0e0dc;box-shadow:0 1px 4px #e0e0dc}
+.print-only{display:none!important}
+@media print{@page{margin:1.25cm .75cm}
+*{-webkit-box-shadow:none!important;box-shadow:none!important;text-shadow:none!important}
+a{color:inherit!important;text-decoration:underline!important}
+a.bare,a[href^="#"],a[href^="mailto:"]{text-decoration:none!important}
+a[href^="http:"]:not(.bare):after,a[href^="https:"]:not(.bare):after{content:"(" attr(href) ")";display:inline-block;font-size:.875em;padding-left:.25em}
+abbr[title]:after{content:" (" attr(title) ")"}
+pre,blockquote,tr,img,object,svg{page-break-inside:avoid}
+thead{display:table-header-group}
+svg{max-width:100%}
+p,blockquote,dt,td.content{font-size:1em;orphans:3;widows:3}
+h2,h3,#toctitle,.sidebarblock>.content>.title{page-break-after:avoid}
+#toc,.sidebarblock,.exampleblock>.content{background:none!important}
+#toc{border-bottom:1px solid #ddddd8!important;padding-bottom:0!important}
+.sect1{padding-bottom:0!important}
+.sect1+.sect1{border:0!important}
+#header>h1:first-child{margin-top:1.25rem}
+body.book #header{text-align:center}
+body.book #header>h1:first-child{border:0!important;margin:2.5em 0 1em 0}
+body.book #header .details{border:0!important;display:block;padding:0!important}
+body.book #header .details span:first-child{margin-left:0!important}
+body.book #header .details br{display:block}
+body.book #header .details br+span:before{content:none!important}
+body.book #toc{border:0!important;text-align:left!important;padding:0!important;margin:0!important}
+body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-break-before:always}
+.listingblock code[data-lang]:before{display:block}
+#footer{background:none!important;padding:0 .9375em}
+#footer-text{color:rgba(0,0,0,.6)!important;font-size:.9em}
+.hide-on-print{display:none!important}
+.print-only{display:block!important}
+.hide-for-print{display:none!important}
+.show-for-print{display:inherit!important}}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+<style>
+.listingblock .pygments .hll { background-color: #ffffcc }
+.listingblock .pygments, .listingblock .pygments code { background: #f8f8f8; }
+.listingblock .pygments .tok-c { color: #408080; font-style: italic } /* Comment */
+.listingblock .pygments .tok-err { border: 1px solid #FF0000 } /* Error */
+.listingblock .pygments .tok-k { color: #008000; font-weight: bold } /* Keyword */
+.listingblock .pygments .tok-o { color: #666666 } /* Operator */
+.listingblock .pygments .tok-ch { color: #408080; font-style: italic } /* Comment.Hashbang */
+.listingblock .pygments .tok-cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.listingblock .pygments .tok-cp { color: #BC7A00 } /* Comment.Preproc */
+.listingblock .pygments .tok-cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
+.listingblock .pygments .tok-c1 { color: #408080; font-style: italic } /* Comment.Single */
+.listingblock .pygments .tok-cs { color: #408080; font-style: italic } /* Comment.Special */
+.listingblock .pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
+.listingblock .pygments .tok-ge { font-style: italic } /* Generic.Emph */
+.listingblock .pygments .tok-gr { color: #FF0000 } /* Generic.Error */
+.listingblock .pygments .tok-gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.listingblock .pygments .tok-gi { color: #00A000 } /* Generic.Inserted */
+.listingblock .pygments .tok-go { color: #888888 } /* Generic.Output */
+.listingblock .pygments .tok-gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.listingblock .pygments .tok-gs { font-weight: bold } /* Generic.Strong */
+.listingblock .pygments .tok-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.listingblock .pygments .tok-gt { color: #0044DD } /* Generic.Traceback */
+.listingblock .pygments .tok-kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.listingblock .pygments .tok-kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.listingblock .pygments .tok-kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.listingblock .pygments .tok-kp { color: #008000 } /* Keyword.Pseudo */
+.listingblock .pygments .tok-kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.listingblock .pygments .tok-kt { color: #B00040 } /* Keyword.Type */
+.listingblock .pygments .tok-m { color: #666666 } /* Literal.Number */
+.listingblock .pygments .tok-s { color: #BA2121 } /* Literal.String */
+.listingblock .pygments .tok-na { color: #7D9029 } /* Name.Attribute */
+.listingblock .pygments .tok-nb { color: #008000 } /* Name.Builtin */
+.listingblock .pygments .tok-nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.listingblock .pygments .tok-no { color: #880000 } /* Name.Constant */
+.listingblock .pygments .tok-nd { color: #AA22FF } /* Name.Decorator */
+.listingblock .pygments .tok-ni { color: #999999; font-weight: bold } /* Name.Entity */
+.listingblock .pygments .tok-ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.listingblock .pygments .tok-nf { color: #0000FF } /* Name.Function */
+.listingblock .pygments .tok-nl { color: #A0A000 } /* Name.Label */
+.listingblock .pygments .tok-nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.listingblock .pygments .tok-nt { color: #008000; font-weight: bold } /* Name.Tag */
+.listingblock .pygments .tok-nv { color: #19177C } /* Name.Variable */
+.listingblock .pygments .tok-ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.listingblock .pygments .tok-w { color: #bbbbbb } /* Text.Whitespace */
+.listingblock .pygments .tok-mb { color: #666666 } /* Literal.Number.Bin */
+.listingblock .pygments .tok-mf { color: #666666 } /* Literal.Number.Float */
+.listingblock .pygments .tok-mh { color: #666666 } /* Literal.Number.Hex */
+.listingblock .pygments .tok-mi { color: #666666 } /* Literal.Number.Integer */
+.listingblock .pygments .tok-mo { color: #666666 } /* Literal.Number.Oct */
+.listingblock .pygments .tok-sa { color: #BA2121 } /* Literal.String.Affix */
+.listingblock .pygments .tok-sb { color: #BA2121 } /* Literal.String.Backtick */
+.listingblock .pygments .tok-sc { color: #BA2121 } /* Literal.String.Char */
+.listingblock .pygments .tok-dl { color: #BA2121 } /* Literal.String.Delimiter */
+.listingblock .pygments .tok-sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.listingblock .pygments .tok-s2 { color: #BA2121 } /* Literal.String.Double */
+.listingblock .pygments .tok-se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.listingblock .pygments .tok-sh { color: #BA2121 } /* Literal.String.Heredoc */
+.listingblock .pygments .tok-si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.listingblock .pygments .tok-sx { color: #008000 } /* Literal.String.Other */
+.listingblock .pygments .tok-sr { color: #BB6688 } /* Literal.String.Regex */
+.listingblock .pygments .tok-s1 { color: #BA2121 } /* Literal.String.Single */
+.listingblock .pygments .tok-ss { color: #19177C } /* Literal.String.Symbol */
+.listingblock .pygments .tok-bp { color: #008000 } /* Name.Builtin.Pseudo */
+.listingblock .pygments .tok-fm { color: #0000FF } /* Name.Function.Magic */
+.listingblock .pygments .tok-vc { color: #19177C } /* Name.Variable.Class */
+.listingblock .pygments .tok-vg { color: #19177C } /* Name.Variable.Global */
+.listingblock .pygments .tok-vi { color: #19177C } /* Name.Variable.Instance */
+.listingblock .pygments .tok-vm { color: #19177C } /* Name.Variable.Magic */
+.listingblock .pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
+</style>
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>Myia</h1>
+<div class="details">
+<span id="author" class="author">Bart van Merriënboer</span><br>
+<span id="email" class="email"><a href="mailto:bartvm@google.com">bartvm@google.com</a></span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_introduction">Introduction</a></li>
+<li><a href="#_python_integration">Python integration</a>
+<ul class="sectlevel2">
+<li><a href="#_operator_overloading">Operator overloading</a></li>
+<li><a href="#_metaprogramming">Metaprogramming</a></li>
+<li><a href="#_embedded_language">Embedded language</a></li>
+<li><a href="#_separate_language">Separate language</a></li>
+<li><a href="#_conclusion">Conclusion</a></li>
+</ul>
+</li>
+<li><a href="#_language_design">Language design</a>
+<ul class="sectlevel2">
+<li><a href="#_dataflow_or_functional_programming">Dataflow or functional programming?</a></li>
+<li><a href="#_array_construction">Array construction</a></li>
+<li><a href="#_managing_state">Managing state</a></li>
+<li><a href="#_control_flow">Control flow</a></li>
+<li><a href="#_managing_parameters">Managing parameters</a></li>
+<li><a href="#_lists">Lists</a></li>
+<li><a href="#_concurrency">Concurrency</a></li>
+</ul>
+</li>
+<li><a href="#_type_system">Type system</a>
+<ul class="sectlevel2">
+<li><a href="#_type_declaration">Type declaration</a></li>
+<li><a href="#_dependent_types">Dependent types</a></li>
+<li><a href="#_jit_type_inference">JIT type inference</a></li>
+</ul>
+</li>
+<li><a href="#_implementation">Implementation</a>
+<ul class="sectlevel2">
+<li><a href="#_functions">Functions</a></li>
+<li><a href="#_persistent_data_structures">Persistent data structures</a></li>
+<li><a href="#_automatic_differentiation">Automatic differentiation</a></li>
+<li><a href="#_intermediate_representation">Intermediate representation</a></li>
+</ul>
+</li>
+<li><a href="#_bibliography">Bibliography</a></li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Myia is the project name for a collection of thoughts and ideas on the topic of deep learning frameworks. More specifically, it is a proposal for the development of a purely functional domain-specific language (DSL) for machine learning as well as thoughts on how it should be implemented.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introduction">Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Many frameworks for machine learning have been developed in the past few years. In general, these frameworks support:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>High-level mathematical operators on multi-dimensional arrays <sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnote_1" title="View footnote.">1</a>]</sup></p>
+</li>
+<li>
+<p>Reverse mode automatic differentiation (AD)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Other popular features are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Support for heterogeneous platforms (GPUs) with potentially multiple devices (multi-GPU)</p>
+</li>
+<li>
+<p>High-level algebraic optimizations</p>
+</li>
+<li>
+<p>Ability to deploy on mobile/embedded systems</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In this design document I will try to make a case for the development of a DSL which supports all the aforementioned features. I will argue that viewing many of the problems specific to automatic differentiation and array programming through a lens of purely functional programming provides useful insights, and avoids the unnecessary trade-offs that existing frameworks have made between usability and performance.</p>
+</div>
+<div class="paragraph">
+<p>A sample of some relevant topics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Different approaches to integration with the Python ecosystem such as embedding, metaprogramming, or tracing through overloading</p>
+</li>
+<li>
+<p>Programming paradigms that are suited for expressing machine learning models and algorithms e.g. dataflow programming and functional programming with pure functions</p>
+</li>
+<li>
+<p>Type systems for multi-dimensional arrays</p>
+</li>
+<li>
+<p>Intermediate representations and their amenability to AD, in particular in the context of functional languages and graph-based representations</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_python_integration">Python integration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Python is the most popular programming language in machine learning and data science. Python is part of a large ecosystem which includes packages for reading different file formats, visualizing data, etc. Many machine learning frameworks have made Python integration a priority. There are several ways of accomplishing this integration. Here we consider operator overloading, metaprogramming, embedding, and separate languages which compile to CPython extensions.</p>
+</div>
+<div class="sect2">
+<h3 id="_operator_overloading">Operator overloading</h3>
+<div class="paragraph">
+<p>This approach is the one taken by PyTorch and Autograd. They allow the user to write pure Python code, which is executed by the Python interpreter. Data types and functions are wrapped to trace computations. This can then be used to support AD and tracing JIT style optimizations.</p>
+</div>
+<div class="listingblock">
+<div class="title">Autograd</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">x</span>
+
+<span class="tok-n">df</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">assert</span> <span class="tok-n">df</span><span class="tok-p">(</span><span class="tok-mi">4</span><span class="tok-p">)</span> <span class="tok-o">==</span> <span class="tok-mi">2</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The <code>grad</code> function wraps the function <code>f</code> so that its input argument is wrapped with a custom object which tracks the operations applied to it.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Calling <code>df</code> applies <code>f</code> to the wrapped object, after which the tape (trace) is extracted and walked in reverse to calculate the gradient.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The user can write pure Python including higher order functions, data structures such as lists and dictionaries, logging and visualization, etc.</p>
+</li>
+<li>
+<p>The code is executed (or at least traced) using the Python interpreter and can be debugged using standard Python debugging tools.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Disadvantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The gradient code is executed by a custom loop which cannot be easily inspected or debugged.</p>
+</li>
+<li>
+<p>Tracing and/or execution requires the Python runtime, which is large, can be slow, and is plagued by the GIL.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_metaprogramming">Metaprogramming</h3>
+<div class="paragraph">
+<p>Frameworks such as TensorFlow, Theano, and MXNet use Python to define dataflow (computation) graphs, which are executed using custom runtimes and compilers. MXNet refers to this as <em>symbolic programming</em>. We can view this as metaprogramming where Python is the metalanguage used to program the intermediate representation of some object language which is represented as a dataflow graph.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">x</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Declare a variable <code>x</code> as an input node to the computation graph.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Add a node to the graph whose value is the multiplication of <code>x</code> with itself.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Python is used as the metalanguage.</p>
+</li>
+<li>
+<p>The metaprogramming paradigm allows us to modify the resulting program (the graph) which is powerful.</p>
+</li>
+<li>
+<p>A specific programming paradigm can be enforced in the object language which we can optimize and execute efficiently</p>
+</li>
+<li>
+<p>The resulting program in the object language can be constructed and executed separately from the Python interpreter.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Disadvantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The syntax is verbose.</p>
+</li>
+<li>
+<p>Although Python is used, the user effectively still needs to learn the object language e.g., creating constants, (<code>constant</code> in TensorFlow), how variables are constructed (<code>placeholder</code>) and initialized (<code>feed_dict</code>), and printing (<code>Print</code>).</p>
+</li>
+<li>
+<p>There are two languages, two runtimes, two debuggers, even two programming paradigms (e.g. TensorFlow is lazy and functional whereas Python is greedy and imperative) which are not clearly separated.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_embedded_language">Embedded language</h3>
+<div class="paragraph">
+<p>Another approach is for the user to write functions using (a subset of) the Python syntax. Instead of executing these functions using the Python interpreter, a custom framework transforms, interprets, or compiles the function instead. This approach is used by Python compilers such as Numba and Parakeet, and by TensorFlow&#8217;s graph functions (which compiles Python functions to TensorFlow).</p>
+</div>
+<div class="listingblock">
+<div class="title">Numba</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@jit</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">x</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This decorator means that the Python function is compiled using Numba&#8217;s JIT compiler.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Since the framework in question has complete control over the execution of the 'Python' function, it could completely redefine the semantics of the language, keeping only the syntax the same (e.g. <code>x * x</code> could be defined to mean addition).</p>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The user can mix Python code and the embedded language (which can be Python or something else).</p>
+</li>
+<li>
+<p>The program written in the embedded language can be constructed and executed separately from the Python interpreter.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Disadvantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>It might confuse the user that the embedded language syntax is a restricted set of Python&#8217;s and that its semantics were possibly changed from Python, even though the function is in the same file.</p>
+</li>
+<li>
+<p>We need to shoehorn our language into Python&#8217;s syntax (otherwise the Python interpreter will throw a parsing error).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_separate_language">Separate language</h3>
+<div class="paragraph">
+<p>The approach taken by, for example, Cython is to construct a separate language which easily compiles to CPython extensions.</p>
+</div>
+<div class="listingblock">
+<div class="title">Cython</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cython"><span class="tok-k">cdef</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-nb">int</span> <span class="tok-n">x</span><span class="tok-p">):</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">x</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Cython uses a superset of the Python syntax, allowing it to compile more efficient code.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Advantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Low surprise factor, since there is no confusion about which language gets executed by which runtime.</p>
+</li>
+<li>
+<p>A new language allows us to keep a new, clean syntax while still generating efficient code and enforcing relevant programming paradigms.</p>
+</li>
+<li>
+<p>The numeric program can be constructed and executed separately from the Python interpreter.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Disadvantages</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Requires a two-step development process: First compile language to extension, then run Python code which imports extension.</p>
+</li>
+<li>
+<p>Barrier of entry (whether perceived or real) of new language.</p>
+</li>
+<li>
+<p>Forces a possibly awkward separation between numeric and non-numeric code.</p>
+</li>
+<li>
+<p>Requires implementing a bigger toolchain such as a parser.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_conclusion">Conclusion</h3>
+<div class="paragraph">
+<p>So which approach is best in the case of a machine learning framework? The metaprogramming approach leads to an overly verbose syntax and the cognitive overhead of mixing two languages, whereas the operator overloading approach weds us to the Python interpreter. This leaves us with the options of an embedded language or a separate language.</p>
+</div>
+<div class="paragraph">
+<p>An embedded language restricts the syntax of our language to Python&#8217;s. However, we could use variable and argument annotations (introduced in PEP 3107, 484 and 526), overload little used operators such as <code>&lt;&lt;</code> and <code>&gt;&gt;</code>, introduce new built-ins, etc. As such, it might be feasible to restrict our new language to Python&#8217;s syntax.</p>
+</div>
+<div class="listingblock">
+<div class="title">Python 3</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="cython"><span class="tok-c"># Some random possibilities</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-nb">int</span><span class="tok-p">)</span> <span class="tok-o">-&gt;</span> <span class="tok-s">&#39;gpu1&#39;</span><span class="tok-p">:</span>  <i class="conum" data-value="1"></i><b>(1)</b> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-n">y</span><span class="tok-p">:</span> <span class="tok-nb">int</span> <span class="tok-o">=</span> <span class="tok-mf">2</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="tok-n">y</span> <span class="tok-o">&gt;&gt;</span> <span class="tok-n">gpu2</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="tok-n">z</span><span class="tok-p">:</span> <span class="tok-nb">float</span> <span class="tok-o">=</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">log</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span>  <i class="conum" data-value="5"></i><b>(5)</b> <i class="conum" data-value="6"></i><b>(6)</b>
+    <span class="tok-k">return</span> <span class="tok-n">z</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Set input type.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Define which device this function should be executed on.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Declare variable types.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Send <code>y</code> to a different device.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Allow type casting or checking.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>New built-in <code>log</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>However, it is worth keeping in mind that having 'Python' functions with entirely different semantics might be confusing to the user. This is the trade-off to make to avoid having separate files and a two-step development process.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_language_design">Language design</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We will try to imagine what a Python-like language for machine learning would look like. To see whether an embedded language is feasible, we will try to restrict ourselves to Python&#8217;s syntax.</p>
+</div>
+<div class="paragraph">
+<p>Some of the properties our language should have:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Purely functional; Our language should maintain referential transparency, which allows for parallelization and easy reverse mode AD. On the other hand, we want to keep the syntax similar to Python&#8217;s imperative syntax.</p>
+</li>
+<li>
+<p>Imperative syntax for control flow; We want support for <code>while</code> and <code>if</code> statements, which for many numerical algorithms is a more natural way of expressing control flow than using higher-order operators.</p>
+</li>
+<li>
+<p>Support for higher-order functions; This allows us to naturally express parallel operations such as map and reduce.</p>
+</li>
+<li>
+<p>Support for closures; Support for closures allows us to make the gradient operator closed under its own operation, and hence support higher-order derivatives.<sup class="footnote">[<a id="_footnoteref_2" class="footnote" href="#_footnote_2" title="View footnote.">2</a>]</sup></p>
+</li>
+<li>
+<p>Array type system with type inference and type checking; Static typing is required to generate efficient code. Having detailed type information about our arrays (shape, diagonality, symmetry, etc.) allows us to generate efficient code and detect shape errors early. We want to support type inference to maintain a clean and succinct syntax.</p>
+</li>
+<li>
+<p>Message-passing primitives; for multi-device computation.</p>
+</li>
+</ul>
+</div>
+<div class="sect2">
+<h3 id="_dataflow_or_functional_programming">Dataflow or functional programming?</h3>
+<div class="paragraph">
+<p>Several machine learning frameworks make use of dataflow programming terminology, representing the program as a graph and exposing this representation to the user. Dataflow programming is defined by a set of features which will sound familiar to those familiar with functional languages such as freedom from side effects and single assignment of variables. In fact, "dataflow languages are essentially functional languages with an imperative syntax" [<a href="#Johnston:2004:ADP:1013208.1013209">1</a>].</p>
+</div>
+<div class="paragraph">
+<p>Theano and TensorFlow are perhaps more properly classified as metaprogrammed functional languages with a graph-based intermediate representation, considering that loops are expressed using higher-order operators instead of an imperative syntax. Note that the use of a graph as intermediate representation does not make a language a dataflow language. Graph-based representations exist for functional [<a href="#LeiBa:2015:GHI:2738600.2738626">2</a>] and imperative languages [<a href="#Click:1995:SGI:202529.202534">3</a>] as well.</p>
+</div>
+<div class="paragraph">
+<p>Dataflow programming was developed to enable parallelization. Note however that referential transparency and lazy evaluation are sufficient conditions for trivial parallelization. These conditions are met by most purely functional programming languages.</p>
+</div>
+<div class="paragraph">
+<p>Reasoning about programs as dataflow graphs has been useful for machine learning frameworks because reverse mode AD is simple to reason about on an directed acyclic graph (DAG). However, if not carefully managed, the dataflow programming paradigm can break down when introducing higher-order functions and loops, especiall in the context of AD. The necessity to store variables for backpropagation can quickly introduce statefulness into the program. Note that a graph representation is not essential for AD. Reverse-mode automatic differentiation can be performed on functional and imperative languages as well.</p>
+</div>
+<div class="paragraph">
+<p>Myia shifts its perspective from dataflow programming to purely functional programming. This means that a graph representation is no longer exposed to the user, but automatic parallelization and AD are still supported.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_array_construction">Array construction</h3>
+<div class="paragraph">
+<p>In NumPy or operator overloading frameworks the arrays are declared and initialized through object initialization.</p>
+</div>
+<div class="listingblock">
+<div class="title">NumPy</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">array</span><span class="tok-p">([</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">])</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On the other hand, in the metaprogramming approach which TensorFlow and Theano employ a distinction is made between variable declaration and initialization.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">constant</span><span class="tok-p">([</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">])</span> <i class="conum" data-value="2"></i><b>(2)</b>
+
+<span class="tok-k">with</span> <span class="tok-n">tf</span><span class="tok-o">.</span><span class="tok-n">Session</span><span class="tok-p">()</span> <span class="tok-k">as</span> <span class="tok-n">sess</span><span class="tok-p">:</span>
+    <span class="tok-n">sess</span><span class="tok-o">.</span><span class="tok-n">run</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">feed_dict</span><span class="tok-o">=</span><span class="tok-p">{</span><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">array</span><span class="tok-p">([</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">])})</span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>x</code> is a variable with undefined value (which cannot be done in Python).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>y</code> is a constant.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Variables are initialized when executing the graph.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In many array programming languages arrays are built-in data types. This leads to a minimally verbose initialization.</p>
+</div>
+<div class="listingblock">
+<div class="title">MATLAB</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="matlab"><span class="tok-n">x</span> <span class="tok-p">=</span> <span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since mutable lists are not allowed in Myia, we can co-opt Python&#8217;s list notation and define arrays in the same way as MATLAB.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_managing_state">Managing state</h3>
+<div class="paragraph">
+<p>Since our expressions are mathematical, most operations in the language are naturally pure functions. Three exceptions come to mind:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>I/O</p>
+</li>
+<li>
+<p>Random numbers</p>
+</li>
+<li>
+<p>In-place operations</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We can deal with I/O and random number generators in an ad-hoc manner, defining them as atomic operations that modify some global state (I/O and the seed respectively).</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">hello</span><span class="tok-p">():</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;hello&#39;</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">world</span><span class="tok-p">():</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;world&#39;</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">hello</span><span class="tok-p">()</span>
+    <span class="tok-n">world</span><span class="tok-p">()</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This function can print <code>hello</code> and then <code>world</code>, or <code>world</code> and then <code>hello</code></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>However, this would introduce non-determinism in calls to the random number generator (since instruction order is not guaranteed). This can be addressed by allowing the user to explicitly carry around the RNG&#8217;s state if they choose to do so.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
+    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
+    <span class="tok-k">return</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">seed</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
+    <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>By explicitly passing through the random number generator, we force <code>g</code> to be evaluated after <code>f</code>, which means that <code>x</code> and <code>y</code> are sampled deterministically.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Modifying array elements is awkward in a purely functional setting. The Python syntax for modifying an array element, <code>y[i] = x</code>, assumes mutability.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">x</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In Python this would print <code>[1], [1]</code>, but given that our arrays are immutable, this would have to print <code>[0], [1]</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In a purely functional context this syntax is unclear. Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, this requires a special syntax. Also, in general we cannot allow the user to force in-place operations, because the original array might be needed for the backward pass of reverse mode AD. One possible is solution is simply to give <code>y[i] = x</code> the semantics of a destructive assignment statement, <code>y = y with y[i] = x</code>, instead of mutation.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_control_flow">Control flow</h3>
+<div class="paragraph">
+<p>One of the cases in which TensorFlow and Theano&#8217;s approach becomes particularly awkward is when constructing loops or conditionals. They are metaprogrammed using a higher-order function which takes a Python function representing the loop body or branches as an input.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-n">constant</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
+<span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">less</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">10</span><span class="tok-p">)</span>
+<span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">add</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">)</span>
+<span class="tok-n">r</span> <span class="tok-o">=</span> <span class="tok-n">while_loop</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">b</span><span class="tok-p">,</span> <span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">])</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>While this makes sense in the context of TensorFlow&#8217;s underlying 'language' being a dataflow graph (and hence, in a way, functional), it also leads to an unnatural way of expressing loops in Python. Most people would prefer the imperative formulation.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span>
+<span class="tok-k">while</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-mi">10</span><span class="tok-p">:</span>
+    <span class="tok-n">i</span> <span class="tok-o">+=</span> <span class="tok-mi">1</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_managing_parameters">Managing parameters</h3>
+<div class="paragraph">
+<p>Modern machine learning models can have a large number of parameters. Managing these parameter sets and manipulating them (e.g., updating them, calculating norms) should be easy. In TensorFlow and Theano this is generally not an issue, since powerful metaprogramming can be used; looping over a parameter collection in Python results in parallel operations in the object language. In other frameworks (e.g. Torch) an object-oriented approach is used instead, where the parameters are part of the state of some operator (layer).</p>
+</div>
+<div class="paragraph">
+<p>Neither of these approaches works in our case. One could consider closures to avoid explicitly passing around large parameter collections in a functional setting, but this syntax is troublesome in the context of parameter updates and AD. Once variables have been closed over, it becomes difficult to define a syntax that allows the user to take derivatives with respect to them.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
+    <span class="tok-n">W</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">)</span>
+    <span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">)</span>
+    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">b</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">layer</span>
+
+<span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-c1"># grad(perceptron, wrt=W, b) </span><i class="conum" data-value="2"></i><b>(2)</b>
+<span class="tok-c1"># W = W - lr * dW </span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The model is a function closed over the parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>However, how do we take the gradient with respect to these parameters if they are not in scope?</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>And how do we rebind updated parameters?</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If we have to pass around large collections of parameters, it is important that this can be done with a clean syntax and with support for operating over the entire collection. Records (structs, or <code>namedtuple</code> in Python) should be supported, and we will introduce a function, <code>walk</code>, which applies a function to each array member in a potentially nested set of records.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
+    <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-n">W</span><span class="tok-p">:</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">),</span> <span class="tok-n">b</span><span class="tok-p">:</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">)}</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
+        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">b</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-k">return</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">layer</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">model</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">):</span>
+    <span class="tok-n">y_hat</span> <span class="tok-o">=</span> <span class="tok-n">model</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">loss</span><span class="tok-p">(</span><span class="tok-n">y_hat</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">step</span><span class="tok-p">(</span><span class="tok-n">parameter</span><span class="tok-p">,</span> <span class="tok-n">gradient</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">parameter</span> <span class="tok-o">-</span> <span class="tok-mf">0.1</span> <span class="tok-o">*</span> <span class="tok-n">gradient</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">train</span><span class="tok-p">(</span><span class="tok-n">dataset</span><span class="tok-p">):</span>
+    <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="tok-k">for</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-ow">in</span> <span class="tok-n">dataset</span><span class="tok-p">:</span>
+        <span class="tok-n">grads</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">wrt</span><span class="tok-o">=</span><span class="tok-n">weights</span><span class="tok-p">)(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">)</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">walk</span><span class="tok-p">(</span><span class="tok-n">step</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">grads</span><span class="tok-p">)</span> <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Here we construct a record using Python&#8217;s dictionary syntax with the keys interpreted as strings. A number of other syntaxes would be possible.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>To keep the notation clean we use the same notation as for <code>namedtuple</code> objects in Python, instead of the more verbose dictionary notation <code>parameters['W']</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Construct models by returning a function and a set of parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Gradients can be taken with respect to collections. The gradient will be a similarly structured collection containing the gradients of the variables.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The collection of weights is updated, returning a new collection of the same structure.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_lists">Lists</h3>
+<div class="paragraph">
+<p>Besides records, our language should have one more data structure: lists. Lists are useful for the implementation of many algorithms e.g., quasi-Newton methods require keeping a history of gradients. Unlike Python, static typing mandates that these lists are typed. Theano has such a data structure, called <a href="http://deeplearning.net/software/theano/library/typed_list.html"><code>typed_list</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>We&#8217;ll use a functional syntax here, concatenating lists instead of mutating them in-place.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">(</span><span class="tok-mi">3</span><span class="tok-p">,)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">([</span><span class="tok-mi">3</span><span class="tok-p">,</span> <span class="tok-mi">4</span><span class="tok-p">,</span> <span class="tok-mi">5</span><span class="tok-p">],)</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">((),)</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Since the <code>[]</code> notation is used for arrays, we use Python&#8217;s tuple notation instead.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This would raise a compile-time error, because <code>((),)</code> is a list of lists, which cannot be concatenated with <code>l</code>, a list of arrays.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_concurrency">Concurrency</h3>
+<div class="paragraph">
+<p>Concurrency is complicated in machine learning frameworks. We are dealing with many levels of concurrency:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Array operations are performed in parallel on devices (e.g., using SIMD or CUDA instructions)</p>
+</li>
+<li>
+<p>A single device can perform multiple operations in parallel (e.g., using multiple threads or CUDA streams)</p>
+</li>
+<li>
+<p>Multiple devices can operate in parallel (CPU and any number of GPUs)</p>
+</li>
+<li>
+<p>Separate hosts can work in parallel (distributed computing)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Different levels of concurrency are handled differently by existing frameworks.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The lowest level of parallelism is often implicit, automatically using SIMD instructions and multiple threads.</p>
+</li>
+<li>
+<p>Performing multiple operations in parallel on a single device is generally not done in TensorFlow and Theano, because the assumption is that a single instruction can saturate the device. This isn&#8217;t always the case though, which is why e.g. MXNet schedules its operations round-robin style on multiple CUDA streams. PyTorch allows for this kind of parallelism by supporting Python&#8217;s <code>multiprocessing</code> module and providing some primitives in the <code>nn.parrallel</code> module.</p>
+</li>
+<li>
+<p>Theano and TensorFlow allow you to associate devices to operations. If data needs to be transferred between devices, this is represented using <code>Send</code>/<code>Receive</code> or <code>transfer</code> nodes in TensorFlow and Theano respectively.</p>
+</li>
+<li>
+<p>Distributed computation is generally supported through separate modules such as Platoon for Theano, <code>tf.train.Server</code> for TensorFlow, and <code>torch.distributed</code> for PyTorch. These frameworks have different levels of abstraction.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>If a language is purely functional we can theoretically parallelize the program automatically. However, in practice we still need to give the user control over both the location of data and execution.</p>
+</div>
+<div class="paragraph">
+<p>Note however that a single operation could span multiple devices (e.g., NCCL&#8217;s primitives) and that a single array can be shared by several devices (e.g., multiple CUDA streams can access the same memory). However, we can associate a single device to each operation, and if we do not allow the user to act on the data lock-free (note that this makes implementing HogWild-style algorithms impossible) we can say that each value belongs to a single device at a given time. We can then manage concurrency through message passing (shared memory is much harder to reconcile with a functional language and is more difficult to reason about).</p>
+</div>
+<div class="paragraph">
+<p>There are several approaches to message passing. Two common ones are communication sequential processes (CSP), which is used by Go, and the actor model, used by languages such as Erlang and Scala. CSP is synchronous whereas the actor model is asynchronous. CSP can be seen as a special case of the actor model with a zero queue size i.e. the message is not sent until the receiver is ready to accept it. However, asynchronous CSP variations exist (e.g., Clojure&#8217;s async module or Go&#8217;s buffered channels). The advantage of using channels instead of actors is that they can be naturally typed.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-c1"># TODO Figure out Go-like channel primitives that can be used to do multi-device computing</span>
+<span class="tok-c1"># Main question: How to deal with primitives whose inputs are on different devices?</span>
+<span class="tok-c1"># We can decouple data locality and execution, but that becomes very verbose...</span>
+<span class="tok-c1"># Device could be part of type (allows us to check at compile time whether the data will be in the correct place)</span>
+<span class="tok-c1"># but that means changing types when number of devices changes?</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_type_system">Type system</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Myia is in principal statically typed with support for type inference. However, some type attributes can remain undefined. For example, the shape of a matrix can remain undefined, allowing a function to operate on matrices of different sizes. This means that some type inference must be performed at runtime (gradual typing). The type system is dependent in the sense that the array&#8217;s dimensionality and shape are part of the type.</p>
+</div>
+<div class="sect2">
+<h3 id="_type_declaration">Type declaration</h3>
+<div class="paragraph">
+<p>Although Python&#8217;s list syntax allows us to cleanly define vectors (<code>x = [1, 2, 3]</code>) it doesn&#8217;t easily allow us to specify the floating-point precision, which is necessary for high-performance computing. We could use Python&#8217;s list syntax with variable annotations to accomplish this instead.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">double</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">]</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A vector with double precision (<code>float64</code>)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Annotating expressions or arguments with a type can serve as a way of type checking.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-nb">float</span> <span class="tok-o">=</span> <span class="tok-mi">2</span>
+<span class="tok-n">y</span><span class="tok-p">:</span> <span class="tok-nb">float</span> <span class="tok-o">=</span> <span class="tok-mi">3</span>
+<span class="tok-n">z</span><span class="tok-p">:</span> <span class="tok-n">double</span> <span class="tok-o">=</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-n">y</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This will raise a type error because <code>x</code> is inferred to be of type <code>float</code> and not <code>double</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The same syntax can be used for arbitrary complex types.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">Matrix</span><span class="tok-p">[</span><span class="tok-n">symmetric</span><span class="tok-o">=</span><span class="tok-kc">True</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-p">[[</span><span class="tok-mi">2</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">],</span>
+                             <span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">]]</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dependent_types">Dependent types</h3>
+<div class="paragraph">
+<p>The type system used in Theano and TensorFlow is generally limited to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Data type</p>
+</li>
+<li>
+<p>Dimensionality</p>
+</li>
+<li>
+<p>Shape (optional)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Types could be extended to provide further (optional) information that would allow for more efficient kernels to be called, more efficient memory usage, and type safety. For example:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Bands (triangularity/diagonality)</p>
+</li>
+<li>
+<p>Symmetry</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We can defined bands as a pair of integers which define the offsets above and below the diagonal such that (1, -1) and (-1, 1) are upper and lower triangular respectively, (1, 1) is a diagonal matrix, (2, -1) a Hessenberg matrix, (-1, -1) a general matrix, etc. Several of these matrices have specialized matrix storage schemes that can be used by e.g. LAPACK.</p>
+</div>
+<div class="paragraph">
+<p>Similarly, whether a matrix is symmetric/Hermitian tells us whether we can use specialized BLAS/LAPACK kernels for matrix multiplication, eigenvalue decomposition, etc.</p>
+</div>
+<div class="paragraph">
+<p>To make functions more general, we can also make the dimensionality of the array an optional attribute.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-p">:</span> <span class="tok-n">Array</span><span class="tok-p">):</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-k">return</span> <span class="tok-nb">sum</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">Vector</span><span class="tok-p">):</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-k">return</span> <span class="tok-nb">sum</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This function will work on any array.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This function will raise a type error when called with a multidimensional array.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_jit_type_inference">JIT type inference</h3>
+<div class="paragraph">
+<p>Theano and TensorFlow both perform type inference, but they require the input types to be explicitly declared (e.g. <code>fvector</code> in Theano or <code>placeholder(float64)</code> in TensorFlow). To avoid this we can postpone compilation until the first time a Myia function is called with data from Python. We can then infer the types from the provided data and use this to perform type inference before compiling the function.</p>
+</div>
+<div class="paragraph">
+<p>If a Myia function is called with different input types, we can try to compile the function with a supertype of the two types it was called with (gradual pessimization). If that is not possible, we compile different versions of the same function.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">y</span>
+
+<span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">numpy</span><span class="tok-o">.</span><span class="tok-n">random</span><span class="tok-o">.</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span>
+<span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+
+<span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">numpy</span><span class="tok-o">.</span><span class="tok-n">random</span><span class="tok-o">.</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">,</span> <span class="tok-mi">10</span><span class="tok-p">)</span>
+<span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This Myia function does not have input types defined, so it is not compiled until it is called.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>When <code>f</code> is called we know that the types of <code>x</code> and <code>y</code> are double floating-point vectors and hence <code>x @ y</code> is equivalent to <code>saxpy</code> and the return type of <code>f</code> is a double. The function is compiled and called.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The function is called again with incompatible types (two matrices). The common supertype for vectors and matrices is the general array class. Hence, <code>f</code> is recompiled to perform <code>@</code> in general, including broadcasting.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation">Implementation</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_functions">Functions</h3>
+<div class="paragraph">
+<p>Most languages have the concept of functions. In TensorFlow and Theano functions exist in the metalanguage, but they do not necessarily correspond to functions in the object language, unless they are passed to higher-order operations such as <code>while</code> or <code>map</code>, or when explicitly constructed using Theano&#8217;s <code>OpFromGraph</code> or XLA&#8217;s <code>ComputationBuilder</code> primitives. This means that although some advantages of functions are available through the metalangage (e.g. reducing code duplication, enabling code reuse), others are not. In particular, it is not easy to trace a runtime error to a particular function call, and computation graphs might include large amounts of duplicate code. This increases the program size and the amount of duplicate work performed by optimizing passes. In a way, it can be seen as Theano and TensorFlow inlining every function call by default.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">y</span>
+
+<span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">),</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">)</span>
+<span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In the resulting computation graph there is no trace of the function <code>plus</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Eschewing the metaprogramming approach means that functions can naturally become part of the intermediate representation, and inlining can become optional instead of the default.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_persistent_data_structures">Persistent data structures</h3>
+<div class="paragraph">
+<p>Persistent data structures are efficient immutable data structures. Their use is very natural in automatic differentiation: During the reverse pass we might need the values from the original forward pass. This means that we need to be able to access any previous version of a data structure (e.g., array or list). This is exactly the functionality which persistent data structures provide.</p>
+</div>
+<div class="paragraph">
+<p>For lists, we can use linked lists, a traditional persistent data structure used in functional languages. This allows us to access any version of the list during backpropagation.</p>
+</div>
+<div class="sect3">
+<h4 id="_arrays">Arrays</h4>
+<div class="paragraph">
+<p>Access pattern is mostly linear, and then reversed. So want a persistent array structure that has quick linear updates, and quick linear reverses. Haskell has exactly such a structure: the <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>. The idea is that an array is updated in-place, but that the overwritten entries are stored separately, allowing us to reverse to previous version at any time (e.g., during backpropagation). If two edits are made to the array, it is copied in its entirety (i.e., there are as many copies of the arrays as there are current versions).</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_automatic_differentiation">Automatic differentiation</h3>
+<div class="paragraph">
+<p>Automatic differentiation is the study of how to transform a program that performs a numerical computation into a new program which performs a derivative computation (gradient, Hessian, Jacobian-vector product, etc.)</p>
+</div>
+<div class="sect3">
+<h4 id="_forward_and_reverse_mode">Forward and reverse mode</h4>
+<div class="paragraph">
+<p>Two main modes are used: Forward and reverse mode. Forward mode can be seen as a perturbation of the input, and tracking that perturbation to the output. On the other hand, reverse mode involves perturbing the output and tracking that perturbation back to the input. Forward mode is the efficient choice when there are few inputs, and reverse mode when there are few outputs.</p>
+</div>
+<div class="paragraph">
+<p>Forward mode is relatively straightforward to implement in practice, since it can be done by simply augmenting each variable with its derivative. The order of evaluation is the same as the order of derivative calculations. For example, forward mode accumulation of \$(del f)/(del x) (2, 3)\$ with \$f(x, y) = e^(xy)\$ proceeds as follows:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\begin{align}
+x &amp;= 2 &amp; \dot{x} &amp;= 1 \\
+y &amp;= 3 &amp; \dot{y} &amp;= 0 \\
+z &amp;= xy &amp; \dot{z} &amp;= \dot{x}y + x\dot{y} \\
+w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
+\end{align}\]
+</div>
+</div>
+<div class="paragraph">
+<p>Reverse mode is more complex to implement, since it requires reversing the path through the program. Two main approaches exist: Source code transformation (SCT, define-then-run) and operator overloading (OO, define-by-run).</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_source_code_transformation_and_operator_overloading">Source code transformation and operator overloading</h4>
+<div class="paragraph">
+<p>Operator overloading proceeds by tracing the program, and then walking the trace in reverse. The following example illustrates the concept on \$y = sin(2x)\$.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">TAPE</span> <span class="tok-o">=</span> <span class="tok-p">[]</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">tmp</span> <span class="tok-o">=</span> <span class="tok-mi">2</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">tmp</span> <span class="tok-o">*</span> <span class="tok-n">x</span>
+    <span class="tok-n">TAPE</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-p">((</span><span class="tok-n">mul</span><span class="tok-p">,</span> <span class="tok-p">(</span><span class="tok-s1">&#39;tmp&#39;</span><span class="tok-p">,</span> <span class="tok-s1">&#39;x&#39;</span><span class="tok-p">),</span> <span class="tok-s1">&#39;y&#39;</span><span class="tok-p">,</span> <span class="tok-p">(</span><span class="tok-n">tmp</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">)))</span>
+    <span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">g</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-k">return</span> <span class="tok-n">z</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">sin</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span>
+    <span class="tok-n">TAPE</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-p">((</span><span class="tok-n">sin</span><span class="tok-p">,</span> <span class="tok-p">(</span><span class="tok-s1">&#39;y&#39;</span><span class="tok-p">,),</span> <span class="tok-s1">&#39;z&#39;</span><span class="tok-p">,</span> <span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">,)))</span>
+    <span class="tok-k">return</span> <span class="tok-n">z</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">df</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+
+    <span class="tok-n">adjoint</span> <span class="tok-o">=</span> <span class="tok-p">{</span>
+        <span class="tok-n">mul</span><span class="tok-p">:</span> <span class="tok-k">lambda</span> <span class="tok-n">x1</span><span class="tok-p">,</span> <span class="tok-n">x2</span><span class="tok-p">:</span> <span class="tok-p">(</span><span class="tok-n">x2</span><span class="tok-p">,</span> <span class="tok-n">x1</span><span class="tok-p">),</span>
+        <span class="tok-n">sin</span><span class="tok-p">:</span> <span class="tok-k">lambda</span> <span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-p">(</span><span class="tok-n">cos</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">),)</span>
+    <span class="tok-p">}</span>
+
+    <span class="tok-n">grad</span> <span class="tok-o">=</span> <span class="tok-n">defaultdict</span><span class="tok-p">(</span><span class="tok-nb">int</span><span class="tok-p">)</span>
+    <span class="tok-n">grad</span><span class="tok-p">[</span><span class="tok-s1">&#39;z&#39;</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
+
+    <span class="tok-k">for</span> <span class="tok-n">primitive</span><span class="tok-p">,</span> <span class="tok-n">inputs</span><span class="tok-p">,</span> <span class="tok-n">output</span><span class="tok-p">,</span> <span class="tok-n">values</span> <span class="tok-ow">in</span> <span class="tok-nb">reversed</span><span class="tok-p">(</span><span class="tok-n">TAPE</span><span class="tok-p">):</span>
+        <span class="tok-n">partials</span> <span class="tok-o">=</span> <span class="tok-n">adjoint</span><span class="tok-p">[</span><span class="tok-n">primitive</span><span class="tok-p">](</span><span class="tok-o">*</span><span class="tok-n">values</span><span class="tok-p">)</span>
+        <span class="tok-k">for</span> <span class="tok-nb">input</span><span class="tok-p">,</span> <span class="tok-n">partial</span> <span class="tok-ow">in</span> <span class="tok-nb">zip</span><span class="tok-p">(</span><span class="tok-n">inputs</span><span class="tok-p">,</span> <span class="tok-n">partials</span><span class="tok-p">):</span>
+            <span class="tok-n">grad</span><span class="tok-p">[</span><span class="tok-nb">input</span><span class="tok-p">]</span> <span class="tok-o">+=</span> <span class="tok-n">partial</span> <span class="tok-o">*</span> <span class="tok-n">grad</span><span class="tok-p">[</span><span class="tok-n">output</span><span class="tok-p">]</span> <i class="conum" data-value="4"></i><b>(4)</b>
+
+    <span class="tok-k">return</span> <span class="tok-n">grad</span><span class="tok-p">[</span><span class="tok-s1">&#39;x&#39;</span><span class="tok-p">]</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A single global tape stores a trace of the operations performed and their in- and outputs.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Only primary operations are stored on the tape i.e. the call tree is flattened into a single linear trace.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The function is called at runtime to create the trace.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>This is the application of the chain rule.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Source code transformation on the other hand explicitly constructs functions for the reverse pass. These functions might require intermediate values from the forward pass. These values are stored and read from a tape.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">TAPE</span> <span class="tok-o">=</span> <span class="tok-p">[]</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-mi">2</span> <span class="tok-o">*</span> <span class="tok-n">x</span>
+    <span class="tok-n">TAPE</span><span class="tok-o">.</span><span class="tok-n">append</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span>
+    <span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">g</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">z</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">sin</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">z</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">df</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">dz</span><span class="tok-p">):</span>
+    <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">TAPE</span><span class="tok-o">.</span><span class="tok-n">pop</span><span class="tok-p">()</span>
+    <span class="tok-n">dy</span> <span class="tok-o">=</span> <span class="tok-n">dg</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">dz</span><span class="tok-p">)</span>
+    <span class="tok-n">dx</span> <span class="tok-o">=</span> <span class="tok-n">dy</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
+    <span class="tok-k">return</span> <span class="tok-n">dx</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">dg</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">dz</span><span class="tok-p">):</span>
+    <span class="tok-n">dy</span> <span class="tok-o">=</span> <span class="tok-n">cos</span><span class="tok-p">(</span><span class="tok-n">y</span><span class="tok-p">)</span> <span class="tok-o">*</span> <span class="tok-n">dz</span>
+    <span class="tok-k">return</span> <span class="tok-n">dy</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>SCT also uses a tape, but it is only used to store values on and not the operations performed.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>In this naive example the original functions <code>f</code> and <code>g</code> are called. However, an SCT approach can determine ahead of time that <code>z</code> is not required for the gradient calculation and entirely remove the call to <code>g</code></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Source code transformation starts with a representation of the program. In TensorFlow this is a computation graph, but many traditional AD tools such as OpenAD and Tapenade take raw Fortran or C code as input. This program is then transformed and a new program which calculates the derivative is returned. TensorFlow and Theano perform SCT on a custom, graph-based program representation.</p>
+</div>
+<div class="paragraph">
+<p>Operator overloading executes the original computation while keeping a trace of the operations performed. It then reverse the execution path by walking this trace (called a <em>tape</em>) in reverse. Frameworks such as PyTorch, Chainer and Autograd use this approach.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>In the machine learning community it has sometimes been stated that OO (define-by-run) enables "dynamic graphs" which can calculate derivatives of models that SCT (define-then-run) cannot handle. This is false; both methods are equally powerful.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The trade-offs between two approaches are complex. However, the requirement of OO approaches to execute the original function, regardless of whether values are required for the derivative, can be disadvantageous. For this reason, SCT has been considered the golden standard in automatic differentiation research.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">n</span><span class="tok-p">):</span>
+    <span class="tok-k">for</span> <span class="tok-n">i</span> <span class="tok-ow">in</span> <span class="tok-nb">range</span><span class="tok-p">(</span><span class="tok-n">n</span><span class="tok-p">):</span>
+        <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-mi">1</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span>
+
+<span class="tok-n">df</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">assert</span> <span class="tok-n">df</span><span class="tok-p">(</span><span class="tok-mi">7</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-n">e6</span><span class="tok-p">)</span> <span class="tok-o">==</span> <span class="tok-mi">1</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The gradient is equal to a constant function with value 1. An SCT approach can determine this, and could return a function <code>df</code> which runs in constant time. On the other hand, a naive operator overloading approach would run in \$O(n)\$ time.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_saving_intermediate_variables">Saving intermediate variables</h4>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>TODO: Explain that AD is really all about carrying state around. Instead of doing this on tapes (which are untyped and difficult to optimize for a compiler) we can use closures. Talk about Pearlmutter and Siskind&#8217;s approach using tagged variables and backpropagators.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_intermediate_representation">Intermediate representation</h3>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>TODO: Talk about different graph representations (Theano and TensorFlow, but also classical ones like sea-of-nodes, and the proposed functional graph representation used by Thorin).</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bibliography">Bibliography</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><a id="Johnston:2004:ADP:1013208.1013209"></a>W. M. Johnston, J. R. P. Hanna, and R. J. Millar, “Advances in Dataflow Programming Languages,” <em>ACM Comput. Surv.</em>, vol. 36, no. 1, pp. 1–34, Mar. 2004.</p>
+</li>
+<li>
+<p><a id="LeiBa:2015:GHI:2738600.2738626"></a>R. Leißa, M. Köster, and S. Hack, “A Graph-based Higher-order Intermediate Representation,” in <em>Proceedings of the 13th Annual IEEE/ACM International Symposium on Code Generation and Optimization</em>, Washington, DC, USA, 2015, pp. 202–212.</p>
+</li>
+<li>
+<p><a id="Click:1995:SGI:202529.202534"></a>C. Click and M. Paleczny, “A Simple Graph-based Intermediate Representation,” in <em>Papers from the 1995 ACM SIGPLAN Workshop on Intermediate Representations</em>, New York, NY, USA, 1995, pp. 35–49.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnote_1">
+<a href="#_footnoteref_1">1</a>. TensorFlow uses the term <em>tensor</em> to be synonymous with <em>multi-dimensional array</em>. Technically, a tensor is a function, not a data structure. A tensor can be represented using a multi-dimensional array given a set of basis vectors.
+</div>
+<div class="footnote" id="_footnote_2">
+<a href="#_footnoteref_2">2</a>. Closures are required to take higher-order gradients, but do not necessarily need to be exposed to the user.
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2017-09-07 13:17:32 EDT
+</div>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.6.0/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>
