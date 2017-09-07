@@ -1544,7 +1544,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <div class="sect3">
 <h4 id="_source_code_transformation_and_operator_overloading">Source code transformation and operator overloading</h4>
 <div class="paragraph">
-<p>Operator overloading proceeds by tracing the program, and then walking the trace in reverse. The following example illustrates the concept on \$y = sin(2x)\$.</p>
+<p>Operator overloading executes the original computation while keeping a trace of the operations performed. It then reverses the execution path by walking this trace (called a <em>tape</em>) backwards. Frameworks such as PyTorch, Chainer and Autograd use this approach. The following example illustrates the concept on \$y = sin(2x)\$.</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
@@ -1603,7 +1603,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </table>
 </div>
 <div class="paragraph">
-<p>Source code transformation on the other hand explicitly constructs functions for the reverse pass. These functions might require intermediate values from the forward pass. These values are stored and read from a tape.</p>
+<p>Source code transformation starts with a representation of the program, and reverse the path through the program ahead of time. In TensorFlow and Theano this representation is a computation graph, but many traditional AD tools such as OpenAD and Tapenade take raw Fortran or C code as input. This program is transformed and a new program which calculates the derivative is returned. Note that generated functions might require intermediate values from the forward pass. These values are usually stored and read from a tape. In TensorFlow and Theano a tape is not explicitly needed, because the entire computation graph exists in the same scope (there are no function calls). However, loops (<code>while</code> and <code>scan</code> nodes) must be special-cased to store their intermediate variables so that they can be read during the backward pass.</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
@@ -1643,12 +1643,6 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <td>In this naive example the original functions <code>f</code> and <code>g</code> are called. However, an SCT approach can determine ahead of time that <code>z</code> is not required for the gradient calculation and entirely remove the call to <code>g</code></td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>Source code transformation starts with a representation of the program. In TensorFlow this is a computation graph, but many traditional AD tools such as OpenAD and Tapenade take raw Fortran or C code as input. This program is then transformed and a new program which calculates the derivative is returned. TensorFlow and Theano perform SCT on a custom, graph-based program representation.</p>
-</div>
-<div class="paragraph">
-<p>Operator overloading executes the original computation while keeping a trace of the operations performed. It then reverse the execution path by walking this trace (called a <em>tape</em>) in reverse. Frameworks such as PyTorch, Chainer and Autograd use this approach.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1741,7 +1735,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-07 13:27:03 EDT
+Last updated 2017-09-07 13:38:12 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
