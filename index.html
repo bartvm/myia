@@ -883,6 +883,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>However, it is worth keeping in mind that having 'Python' functions with entirely different semantics might be confusing to the user. This is the trade-off to make to avoid having separate files and a two-step development process.</p>
 </div>
+<div class="paragraph">
+<p>Lastly, note that it is likely straightforward to transition from an embedded language to a separate language, but this is not true the other way around.</p>
+</div>
 </div>
 </div>
 </div>
@@ -985,7 +988,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="paragraph">
-<p>Since mutable lists are not allowed in Myia, we can co-opt Python&#8217;s list notation and define arrays in the same way as MATLAB.</p>
+<p>In Myia, we could co-opt Python&#8217;s set notation to simplify array construction. Syntactic sugar could be added for range construction.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python"><span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">}</span>
+<span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">10</span><span class="tok-p">,</span> <span class="tok-o">...</span><span class="tok-p">,</span> <span class="tok-mi">20</span><span class="tok-p">}</span>
+<span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">2</span><span class="tok-p">,</span> <span class="tok-mi">4</span><span class="tok-p">,</span> <span class="tok-o">...</span><span class="tok-p">,</span> <span class="tok-mi">8</span><span class="tok-p">}</span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1078,7 +1089,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-nd">@myia</span>
 <span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span>
+    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">0</span><span class="tok-p">}</span>
     <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
     <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
@@ -1087,12 +1098,33 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In Python this would print <code>[1], [1]</code>, but given that our arrays are immutable, this would have to print <code>[0], [1]</code>.</td>
+<td>In Python this would print <code>{1}, {1}</code>, but given that our arrays are immutable, this would have to print <code>{0}, {1}</code>.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>In a purely functional context this syntax is unclear. Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, this requires a special syntax. Also, in general we cannot allow the user to force in-place operations, because the original array might be needed for the backward pass of reverse mode AD. One possible is solution is simply to give <code>y[i] = x</code> the semantics of a destructive assignment statement, <code>y = y with y[i] = x</code>, instead of mutation.</p>
+<p>In a purely functional context this syntax is unclear. Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, this requires a special syntax. Also, in general we cannot allow the user to force in-place operations, because the original array might be needed for the backward pass of reverse mode AD. Other languages, such as OCaml, have a special syntax for constructing new objects which are modifications of an immutable object (something like <code>y = {x with x[0] = 2}</code>). For Myia, there are two options:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Give <code>y[i] = x</code> the semantics of a destructive assignment statement (<code>y = y with y[i] = x</code>) instead of mutation. This is clean, but possibly confusing to a user who expects in-place mutation (see example above).</p>
+</li>
+<li>
+<p>Introduce something similar to OCaml&#8217;s "functional update syntax". More verbose and less standard, but more explicit. It also allows multiple mutations to be grouped together, which is more efficient (but a compiler could perform this grouping automatically).</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">with</span> <span class="tok-n">x</span> <span class="tok-k">as</span> <span class="tok-n">y</span><span class="tok-p">:</span>
+        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">2</span>
+        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
+    <span class="tok-k">return</span> <span class="tok-n">y</span></code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1169,7 +1201,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
 <span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
-    <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-n">W</span><span class="tok-p">:</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">),</span> <span class="tok-n">b</span><span class="tok-p">:</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">)}</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">Record</span><span class="tok-p">(</span><span class="tok-n">W</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">),</span> <span class="tok-n">b</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">))</span> <i class="conum" data-value="1"></i><b>(1)</b>
     <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
         <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">b</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="tok-k">return</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">layer</span>
@@ -1195,7 +1227,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Here we construct a record using Python&#8217;s dictionary syntax with the keys interpreted as strings. A number of other syntaxes would be possible.</td>
+<td>Here we construct a record using a similar syntax to <code>dict()</code>. This forces all fields to be strings.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -1215,6 +1247,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>The question as to if and how records can be mutated is the same as for arrays. Here too we can either allow for a destructive assignment syntax, or introduce a new functional update syntax.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_lists">Lists</h3>
@@ -1222,27 +1257,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Besides records, our language should have one more data structure: lists. Lists are useful for the implementation of many algorithms e.g., quasi-Newton methods require keeping a history of gradients. Unlike Python, static typing mandates that these lists are typed. Theano has such a data structure, called <a href="http://deeplearning.net/software/theano/library/typed_list.html"><code>typed_list</code></a>.</p>
 </div>
 <div class="paragraph">
-<p>We&#8217;ll use a functional syntax here, concatenating lists instead of mutating them in-place.</p>
+<p>We&#8217;ll use a functional syntax here, concatenating lists instead of mutating them in-place. However, we can refer back to the discussion on array and record mutation here as well.</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
 <span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">(</span><span class="tok-mi">3</span><span class="tok-p">,)</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">([</span><span class="tok-mi">3</span><span class="tok-p">,</span> <span class="tok-mi">4</span><span class="tok-p">,</span> <span class="tok-mi">5</span><span class="tok-p">],)</span>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">((),)</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">]</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[{</span><span class="tok-mi">3</span><span class="tok-p">,</span> <span class="tok-mi">4</span><span class="tok-p">,</span> <span class="tok-mi">5</span><span class="tok-p">}]</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[[]]</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Since the <code>[]</code> notation is used for arrays, we use Python&#8217;s tuple notation instead.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>This would raise a compile-time error, because <code>((),)</code> is a list of lists, which cannot be concatenated with <code>l</code>, a list of arrays.</td>
+<td>This would raise a compile-time error, because <code>[[]]</code> is a list of lists, which cannot be concatenated with <code>l</code>, a list of arrays.</td>
 </tr>
 </table>
 </div>
@@ -1296,15 +1327,49 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>There are several approaches to message passing. Two common ones are communication sequential processes (CSP), which is used by Go, and the actor model, used by languages such as Erlang and Scala. CSP is synchronous whereas the actor model is asynchronous. CSP can be seen as a special case of the actor model with a zero queue size i.e. the message is not sent until the receiver is ready to accept it. However, asynchronous CSP variations exist (e.g., Clojure&#8217;s async module or Go&#8217;s buffered channels). The advantage of using channels instead of actors is that they can be naturally typed.</p>
 </div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>TODO: Figure out Go-like channel primitives that can be used to do multi-device computing. Main question: How to deal with primitives whose inputs are on different devices? We can decouple data locality and execution, but that becomes very verbose.</p>
+</div>
+</div>
+</div>
 <div class="listingblock">
 <div class="title">Myia</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-c1"># TODO Figure out Go-like channel primitives that can be used to do multi-device computing</span>
-<span class="tok-c1"># Main question: How to deal with primitives whose inputs are on different devices?</span>
-<span class="tok-c1"># We can decouple data locality and execution, but that becomes very verbose...</span>
-<span class="tok-c1"># Device could be part of type (allows us to check at compile time whether the data will be in the correct place)</span>
-<span class="tok-c1"># but that means changing types when number of devices changes?</span></code></pre>
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
+
+<span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">np</span><span class="tok-o">.</span><span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">send</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">):</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">recv</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">y</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-n">channel</span><span class="tok-p">()</span>
+    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu1</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">g</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu2</span><span class="tok-p">)</span></code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Should the data automatically be transferred to the GPU? We might want to execute a custom operator on the GPU which uses both CPU and GPU data.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Run different functions on different devices and allow them to communicate through a channel.</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -1411,6 +1476,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-p">:</span> <span class="tok-n">Array</span><span class="tok-p">):</span> <i class="conum" data-value="1"></i><b>(1)</b>
     <span class="tok-k">return</span> <span class="tok-nb">sum</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
 
+<span class="tok-nd">@myia</span>
 <span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">Vector</span><span class="tok-p">):</span> <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="tok-k">return</span> <span class="tok-nb">sum</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span></code></pre>
 </div>
@@ -1510,7 +1576,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="_arrays">Arrays</h4>
 <div class="paragraph">
-<p>We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. Haskell has exactly such a structure: the <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>. The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in. For efficiency purposes we probably want as many live states as there are leaves in the tree (i.e., the code <code>y = x; x[0] = 1; y[0] = 2</code> results in a full copy of the array being made, so that both <code>x</code> and <code>y</code> are live in memory).</p>
+<p>We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. This data structure is described in [<a href="#Conchon:2007:PUD:1292535.1292541">4</a>] and exists in Haskell as <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>.</p>
+</div>
+<div class="paragraph">
+<p>The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in.</p>
 </div>
 </div>
 </div>
@@ -1719,6 +1788,9 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <li>
 <p><a id="Click:1995:SGI:202529.202534"></a>C. Click and M. Paleczny, “A Simple Graph-based Intermediate Representation,” in <em>Papers from the 1995 ACM SIGPLAN Workshop on Intermediate Representations</em>, New York, NY, USA, 1995, pp. 35–49.</p>
 </li>
+<li>
+<p><a id="Conchon:2007:PUD:1292535.1292541"></a>S. Conchon and J.-C. Filliâtre, “A Persistent Union-find Data Structure,” in <em>Proceedings of the 2007 Workshop on Workshop on ML</em>, New York, NY, USA, 2007, pp. 37–46.</p>
+</li>
 </ol>
 </div>
 </div>
@@ -1735,7 +1807,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-07 13:38:12 EDT
+Last updated 2017-09-07 17:33:04 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
