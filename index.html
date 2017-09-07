@@ -1510,7 +1510,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="_arrays">Arrays</h4>
 <div class="paragraph">
-<p>Access pattern is mostly linear, and then reversed. So want a persistent array structure that has quick linear updates, and quick linear reverses. Haskell has exactly such a structure: the <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>. The idea is that an array is updated in-place, but that the overwritten entries are stored separately, allowing us to reverse to previous version at any time (e.g., during backpropagation). If two edits are made to the array, it is copied in its entirety (i.e., there are as many copies of the arrays as there are current versions).</p>
+<p>We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. Haskell has exactly such a structure: the <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>. The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in. For efficiency purposes we probably want as many live states as there are leaves in the tree (i.e., the code <code>y = x; x[0] = 1; y[0] = 2</code> results in a full copy of the array being made, so that both <code>x</code> and <code>y</code> are live in memory).</p>
 </div>
 </div>
 </div>
@@ -1741,7 +1741,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-07 13:17:32 EDT
+Last updated 2017-09-07 13:27:03 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
