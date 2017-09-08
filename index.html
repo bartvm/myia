@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1586,7 +1585,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect2">
 <h3 id="_automatic_differentiation">Automatic differentiation</h3>
 <div class="paragraph">
-<p>Automatic differentiation is the study of how to transform a program that performs a numerical computation into a new program which performs a derivative computation (gradient, Hessian, Jacobian-vector product, etc.)</p>
+<p>Automatic differentiation is the study of how to transform a program that performs a numerical computation into a new program which performs a derivative computation (gradient, Hessian, Jacobian-vector product, etc.) It does so by applying the chain rule programmatically to the sequence of elementary arithmetic operations that every program consists of.</p>
 </div>
 <div class="sect3">
 <h4 id="_forward_and_reverse_mode">Forward and reverse mode</h4>
@@ -1752,13 +1751,63 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 </div>
 <div class="sect3">
-<h4 id="_saving_intermediate_variables">Saving intermediate variables</h4>
-<div class="sidebarblock">
-<div class="content">
+<h4 id="_reverse_mode_ad_in_a_functional_language">Reverse mode AD in a functional language</h4>
 <div class="paragraph">
-<p>TODO: Explain that AD is really all about carrying state around. Instead of doing this on tapes (which are untyped and difficult to optimize for a compiler) we can use closures. Talk about Pearlmutter and Siskind&#8217;s approach using tagged variables and backpropagators.</p>
+<p>Although SCT reverses the control flow of the program ahead of time, there is still a runtime component: A queue is used to store intermediate values for use by the adjoint functions. This complicates static analysis and optimizations, since many rules need to give this tape special consideration. For example, if dead code elimination determines that a push or pop statement can be removed, its corresponding pop or push statement must also be removed. And in order to take higher order derivatives, differentiation rules for this tape are needed. One way of looking at SCT is that the tape used to restore the state of the program so that the adjoint can be executed in the same lexical scope as the original statement.</p>
+</div>
+<div class="paragraph">
+<p>From a functional programming perspective, we have a more natural tool available to store the state of a program: Closures are records of functions together with an environment. This is the idea explored in [<a href="#Pearlmutter:2008:RAF:1330017.1330018">5</a>] and implemented in e.g. <a href="http://www.bcl.hamilton.ie/~qobi/stalingrad/">Stalingrad</a> and derived projects such as <a href="https://diffsharp.github.io/DiffSharp/">DiffSharp</a> and <a href="https://github.com/axch/dysvunctional-language">DVL</a>.</p>
+</div>
+<div class="paragraph">
+<p>The following Python code illustrates the concept of the transformation discussed on p. 17 of [<a href="#Pearlmutter:2008:RAF:1330017.1330018">5</a>]. It correctly calculates \(\frac{d}{dx}\tanh(\exp(x)) = (1 - \tanh^2(\exp(x))) \cdot \exp(x)\).</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x0</span><span class="tok-p">):</span>
+    <span class="tok-n">x1</span> <span class="tok-o">=</span> <span class="tok-n">exp</span><span class="tok-p">(</span><span class="tok-n">x0</span><span class="tok-p">)</span>
+    <span class="tok-n">x2</span> <span class="tok-o">=</span> <span class="tok-n">tanh</span><span class="tok-p">(</span><span class="tok-n">x1</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">x2</span>
+
+<span class="tok-k">def</span> <span class="tok-nf">df</span><span class="tok-p">(</span><span class="tok-n">x0_up</span><span class="tok-p">,</span> <span class="tok-n">x2_down</span><span class="tok-p">):</span>
+    <span class="tok-n">x1_up</span> <span class="tok-o">=</span> <span class="tok-n">exp</span><span class="tok-p">(</span><span class="tok-n">x0_up</span><span class="tok-p">)</span>
+    <span class="tok-k">def</span> <span class="tok-nf">x1_bar</span><span class="tok-p">(</span><span class="tok-n">x1_down</span><span class="tok-p">):</span> <i class="conum" data-value="1"></i><b>(1)</b>
+        <span class="tok-k">return</span> <span class="tok-n">x1_down</span> <span class="tok-o">*</span> <span class="tok-n">x1_up</span>
+
+    <span class="tok-n">x2_up</span> <span class="tok-o">=</span> <span class="tok-n">tanh</span><span class="tok-p">(</span><span class="tok-n">x1_up</span><span class="tok-p">)</span>
+    <span class="tok-k">def</span> <span class="tok-nf">x2_bar</span><span class="tok-p">(</span><span class="tok-n">x2_down</span><span class="tok-p">):</span>
+        <span class="tok-k">return</span> <span class="tok-n">x2_down</span> <span class="tok-o">*</span> <span class="tok-p">(</span><span class="tok-mi">1</span> <span class="tok-o">-</span> <span class="tok-n">x2_up</span> <span class="tok-o">**</span> <span class="tok-mi">2</span><span class="tok-p">)</span>
+
+    <span class="tok-n">x0_down</span> <span class="tok-o">=</span> <span class="tok-mi">0</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-n">x1_down</span> <span class="tok-o">=</span> <span class="tok-mi">0</span>
+
+    <span class="tok-n">x1_down</span> <span class="tok-o">+=</span> <span class="tok-n">x2_bar</span><span class="tok-p">(</span><span class="tok-n">x2_down</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="tok-n">x0_down</span> <span class="tok-o">+=</span> <span class="tok-n">x1_bar</span><span class="tok-p">(</span><span class="tok-n">x1_down</span><span class="tok-p">)</span>
+
+    <span class="tok-k">return</span> <span class="tok-n">x0_down</span></code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Each statement is augmented with the creation of a closure, called a <em>backpropagator</em>, which binds to the values it needs for the backward pass (<code>x1_up</code> in this case).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This is the beginning of the backward pass. Initially each partial derivative is zero.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The backpropagators are now called in reverse order. They are passed the derivative with respect to the output of the original statement.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The main difficulty of this approach lies in dealing with higher order derivatives, which requires taking the derivative with respect to closed over variables. This <a href="https://gist.github.com/bartvm/1441575c066d98af9a2fb57d681267e6">notebook</a> illustrates how this is solved.</p>
+</div>
+<div class="paragraph">
+<p>Note that the use of closures doesn&#8217;t magically eliminate the need to store intermediate variables; it simply uses closures as the way of storing them at runtime instead of using a queue. The advantage is that the compiler does not need to give the automatic differentiation code any special consideration, since all the desired optimizations can be handled by more general optimizations such as closure elimination, inlining, lambda lifiting, etc.</p>
 </div>
 </div>
 </div>
@@ -1791,6 +1840,9 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <li>
 <p><a id="Conchon:2007:PUD:1292535.1292541"></a>S. Conchon and J.-C. Filliâtre, “A Persistent Union-find Data Structure,” in <em>Proceedings of the 2007 Workshop on Workshop on ML</em>, New York, NY, USA, 2007, pp. 37–46.</p>
 </li>
+<li>
+<p><a id="Pearlmutter:2008:RAF:1330017.1330018"></a>B. A. Pearlmutter and J. M. Siskind, “Reverse-mode AD in a Functional Framework: Lambda the Ultimate Backpropagator,” <em>ACM Trans. Program. Lang. Syst.</em>, vol. 30, no. 2, pp. 7:1–7:36, Mar. 2008.</p>
+</li>
 </ol>
 </div>
 </div>
@@ -1807,7 +1859,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-07 17:33:04 EDT
+Last updated 2017-09-08 13:15:47 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
