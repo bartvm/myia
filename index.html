@@ -514,12 +514,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_language_design">Language design</a>
 <ul class="sectlevel2">
 <li><a href="#_dataflow_or_functional_programming">Dataflow or functional programming?</a></li>
-<li><a href="#_array_construction">Array construction</a></li>
+<li><a href="#_basics">Basics</a></li>
+<li><a href="#_data_structures">Data structures</a>
+<ul class="sectlevel3">
+<li><a href="#_lists">Lists</a></li>
+<li><a href="#_records">Records</a></li>
+</ul>
+</li>
 <li><a href="#_managing_state">Managing state</a></li>
 <li><a href="#_control_flow">Control flow</a></li>
-<li><a href="#_managing_parameters">Managing parameters</a></li>
-<li><a href="#_lists">Lists</a></li>
-<li><a href="#_concurrency">Concurrency</a></li>
+<li><a href="#_syntactic_sugar_array_construction">Syntactic sugar: Array construction</a></li>
 </ul>
 </li>
 <li><a href="#_type_system">Type system</a>
@@ -529,12 +533,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_jit_type_inference">JIT type inference</a></li>
 </ul>
 </li>
+<li><a href="#_concurrency">Concurrency</a></li>
 <li><a href="#_implementation">Implementation</a>
 <ul class="sectlevel2">
-<li><a href="#_functions">Functions</a></li>
-<li><a href="#_persistent_data_structures">Persistent data structures</a></li>
-<li><a href="#_automatic_differentiation">Automatic differentiation</a></li>
+<li><a href="#_automatic_differentiation">Automatic differentiation</a>
+<ul class="sectlevel3">
+<li><a href="#_forward_and_reverse_mode">Forward and reverse mode</a></li>
+<li><a href="#_source_code_transformation_and_operator_overloading">Source code transformation and operator overloading</a></li>
+<li><a href="#_reverse_mode_ad_in_a_functional_language">Reverse mode AD in a functional language</a></li>
+</ul>
+</li>
+<li><a href="#_persistent_data_structures">Persistent data structures</a>
+<ul class="sectlevel3">
+<li><a href="#_arrays">Arrays</a></li>
+</ul>
+</li>
 <li><a href="#_intermediate_representation">Intermediate representation</a></li>
+<li><a href="#_functions">Functions</a></li>
 </ul>
 </li>
 <li><a href="#_bibliography">Bibliography</a></li>
@@ -892,18 +907,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_language_design">Language design</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We will try to imagine what a Python-like language for machine learning would look like. To see whether an embedded language is feasible, we will try to restrict ourselves to Python&#8217;s syntax.</p>
+<p>The 'language' we will sketch out will effectively be a subset of Python, but with some of the semantics changed in order for the language to be purely functional and statically typed.</p>
 </div>
 <div class="paragraph">
-<p>Some of the properties our language should have:</p>
+<p>In summary, the language will be:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Purely functional; Our language should maintain referential transparency, which allows for parallelization and easy reverse mode AD. On the other hand, we want to keep the syntax similar to Python&#8217;s imperative syntax.</p>
+<p>Similar to Python; it will be very natural to use for Python users.</p>
 </li>
 <li>
-<p>Imperative syntax for control flow; We want support for <code>while</code> and <code>if</code> statements, which for many numerical algorithms is a more natural way of expressing control flow than using higher-order operators.</p>
+<p>Purely functional; Our language should maintain referential transparency, which allows for parallelization and easy reverse mode AD.</p>
+</li>
+<li>
+<p>Imperative syntax for control flow; We want support for Python&#8217;s <code>while</code> and <code>if</code> statements, which for many numerical algorithms is a more natural way of expressing control flow than using higher-order operators.</p>
 </li>
 <li>
 <p>Support for higher-order functions; This allows us to naturally express parallel operations such as map and reduce.</p>
@@ -938,9 +956,357 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect2">
-<h3 id="_array_construction">Array construction</h3>
+<h3 id="_basics">Basics</h3>
 <div class="paragraph">
-<p>In NumPy or operator overloading frameworks the arrays are declared and initialized through object initialization.</p>
+<p>Before going into more detail, let&#8217;s consider a basic example which shows the use of function definitions, function calls, unary and binary operators. Note that arrays in principle are immutable.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-mi">1</span> <span class="tok-o">/</span> <span class="tok-p">(</span><span class="tok-mi">1</span> <span class="tok-o">+</span> <span class="tok-n">exp</span><span class="tok-p">(</span><span class="tok-o">-</span><span class="tok-n">x</span><span class="tok-p">))</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-n">y_hat</span> <span class="tok-o">=</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">w</span><span class="tok-p">)</span>
+    <span class="tok-n">loss</span> <span class="tok-o">=</span> <span class="tok-n">y</span> <span class="tok-o">*</span> <span class="tok-n">log</span><span class="tok-p">(</span><span class="tok-n">y_hat</span><span class="tok-p">)</span> <span class="tok-o">+</span> <span class="tok-p">(</span><span class="tok-mi">1</span> <span class="tok-o">-</span> <span class="tok-n">y</span><span class="tok-p">)</span> <span class="tok-o">*</span> <span class="tok-n">log</span><span class="tok-p">(</span><span class="tok-mi">1</span> <span class="tok-o">-</span> <span class="tok-n">y_hat</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">loss</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">update</span><span class="tok-p">(</span><span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-n">df</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-k">return</span> <span class="tok-n">w</span> <span class="tok-o">-</span> <span class="tok-mf">0.1</span> <span class="tok-o">*</span> <span class="tok-n">df</span><span class="tok-p">(</span><span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">),</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+
+<span class="tok-k">def</span> <span class="tok-nf">train</span><span class="tok-p">():</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="tok-n">w</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span>
+    <span class="tok-k">for</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-ow">in</span> <span class="tok-n">dataset</span><span class="tok-p">:</span>
+        <span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">loss</span> <span class="tok-o">=</span> <span class="tok-n">update</span><span class="tok-p">(</span><span class="tok-n">w</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The <code>@myia</code> decorator is used to distinguish Python and Myia functions.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Similar to Autograd, the gradient operator is a higher-order function which takes a function as input and returns a gradient function with respect to the first argument.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Since variables are immutable, we are returning a new array instead of explicitly updating <code>w</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The reading of the dataset happens in Python.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_data_structures">Data structures</h3>
+<div class="paragraph">
+<p>The immutability of arrays extends to Python data structures i.e. lists and dictionaries must be immutable.</p>
+</div>
+<div class="sect3">
+<h4 id="_lists">Lists</h4>
+<div class="paragraph">
+<p>Lists are useful for the implementation of many algorithms e.g., quasi-Newton methods require keeping a history of gradients. Unlike Python, static typing mandates that these lists are typed. Theano has such a data structure, called <a href="http://deeplearning.net/software/theano/library/typed_list.html"><code>typed_list</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>We&#8217;ll use a functional syntax here, concatenating lists instead of mutating them in-place. We will use the list syntax instead of the tuple syntax though, because tuples are often assumed to have heterogeneously typed elements.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">]</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[</span><span class="tok-mi">4</span><span class="tok-p">]</span>
+    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[[]]</span> <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The type of <code>l</code> is inferred to be <code>List[Array]</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>This would raise a compile-time error, because <code>[[]]</code> is a list of lists, which cannot be concatenated with <code>l</code>, a list of numbers.</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_records">Records</h4>
+<div class="paragraph">
+<p>Modern machine learning models can have a large number of parameters. Managing these parameter sets and manipulating them (e.g., updating them, calculating norms) should be easy. In TensorFlow and Theano this is generally not an issue, since powerful metaprogramming can be used; looping over a parameter collection in Python results in parallel operations in the object language. In other frameworks (e.g. Torch) an object-oriented approach to managing parameters is used instead, where the parameters are part of the state of some operator (layer).</p>
+</div>
+<div class="paragraph">
+<p>Neither of these approaches works in our case. One could consider closures to avoid explicitly passing around large parameter collections in a functional setting, but this syntax is troublesome for parameter updates and AD. Once variables have been closed over, it becomes difficult to define a syntax that allows the user to take derivatives with respect to them.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
+    <span class="tok-n">W</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">)</span>
+    <span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">)</span>
+    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">b</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">layer</span>
+
+<span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-c1"># grad(perceptron, wrt=W, b) </span><i class="conum" data-value="2"></i><b>(2)</b>
+<span class="tok-c1"># W = W - lr * dW </span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The model is a function closed over the parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>However, how do we take the gradient with respect to these parameters if they are not in scope?</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>And how do we rebind updated parameters?</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Python does not have immutable dictionaries to store parameters in (and even if it did, it would be hard to allow for type annotations). On the other hand, Python&#8217;s records (named tuples) can be used for parameter sets, and they allow for type annotations. To make these records easy to operate on we will introduce a function, <code>walk</code>, which applies a function to each array member in a potentially nested set of records.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">class</span> <span class="tok-nc">Weights</span><span class="tok-p">(</span><span class="tok-n">NamedTuple</span><span class="tok-p">):</span>
+    <span class="tok-n">W</span><span class="tok-p">:</span> <span class="tok-n">Matrix</span>
+    <span class="tok-n">b</span><span class="tok-p">:</span> <span class="tok-n">Vector</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
+    <span class="tok-c1"># Weights = namedtuple(&#39;Weights&#39;, [&#39;W&#39;, &#39;b&#39;]) </span><i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">Weights</span><span class="tok-p">(</span><span class="tok-n">W</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">),</span> <span class="tok-n">b</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">))</span>
+    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
+        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">b</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">layer</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">model</span><span class="tok-p">):</span>
+    <span class="tok-n">y_hat</span> <span class="tok-o">=</span> <span class="tok-n">model</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">)</span>
+    <span class="tok-k">return</span> <span class="tok-n">loss</span><span class="tok-p">(</span><span class="tok-n">y_hat</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">step</span><span class="tok-p">(</span><span class="tok-n">parameter</span><span class="tok-p">,</span> <span class="tok-n">gradient</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">parameter</span> <span class="tok-o">-</span> <span class="tok-mf">0.1</span> <span class="tok-o">*</span> <span class="tok-n">gradient</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">train</span><span class="tok-p">(</span><span class="tok-n">dataset</span><span class="tok-p">):</span>
+    <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="tok-k">for</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-ow">in</span> <span class="tok-n">dataset</span><span class="tok-p">:</span>
+        <span class="tok-n">grads</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">)(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span><span class="tok-p">)</span> <i class="conum" data-value="4"></i><b>(4)</b>
+        <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">walk</span><span class="tok-p">(</span><span class="tok-n">step</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">grads</span><span class="tok-p">)</span> <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The typed version of named tuples is used here.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Untyped named tuples can also be created, in which case type inference is used.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Construct models by returning a function and a set of parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Gradients can be taken with respect to named tuples. The gradient will be a named tuple of the same type, containing the gradients of the variables.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>The <code>walk</code> function takes two named tuples and returns a new named tuple with the updated weights.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_managing_state">Managing state</h3>
+<div class="paragraph">
+<p>Since our expressions are mathematical, most operations in the language are naturally pure functions. Three exceptions come to mind:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>I/O</p>
+</li>
+<li>
+<p>Random numbers</p>
+</li>
+<li>
+<p>Array updates</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We can deal with I/O and random number generators in an ad-hoc manner, defining them as atomic operations that modify some global state (I/O and the seed respectively).</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">hello</span><span class="tok-p">():</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;hello&#39;</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">world</span><span class="tok-p">():</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;world&#39;</span><span class="tok-p">)</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">hello</span><span class="tok-p">()</span>
+    <span class="tok-n">world</span><span class="tok-p">()</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>This function can print <code>hello</code> and then <code>world</code>, or <code>world</code> and then <code>hello</code></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>However, this would introduce non-determinism in calls to the random number generator (since instruction order is not guaranteed). This can be addressed by allowing the user to explicitly carry around the RNG&#8217;s state if they choose to do so. Alternativelylo, TensorFlow&#8217;s approach of using a combination of global and local seeds could be used.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
+    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
+    <span class="tok-k">return</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">seed</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
+    <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+    <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>By explicitly passing through the random number generator, we force <code>g</code> to be evaluated after <code>f</code>, which means that <code>x</code> and <code>y</code> are sampled deterministically.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Although arrays are in principal immutable, the user must be allowed to construct new arrays by updating entries. The Python syntax for modifying an array element, <code>y[i] = x</code> however assumes mutability.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">x</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">0</span><span class="tok-p">}</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
+    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In Python this would print <code>{1}, {1}</code>, but given that our arrays are immutable, this would have to print <code>{0}, {1}</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, we cannot allow any impurity, because the original array might be needed during the backward pass of reverse mode AD. Languages such as OCaml have a special syntax for constructing new objects which are modifications of an immutable object (something like <code>y = {x with x[0] = 2}</code>). For Myia, there are two options:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Give <code>y[i] = x</code> the semantics of a destructive assignment statement (<code>y = y with y[i] = x</code>) instead of mutation. This is clean, but possibly confusing to a user who expects in-place mutation (see example above).</p>
+</li>
+<li>
+<p>Introduce something similar to OCaml&#8217;s "functional update syntax". More verbose and less standard, but more explicit.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">with</span> <span class="tok-n">x</span> <span class="tok-k">as</span> <span class="tok-n">y</span><span class="tok-p">:</span>
+        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">2</span>
+        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
+    <span class="tok-k">return</span> <span class="tok-n">y</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that the same two approaches could be used to let the user construct new named tuples and lists which are slight modifications of existing objects.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_control_flow">Control flow</h3>
+<div class="paragraph">
+<p>One of the cases in which TensorFlow and Theano&#8217;s approach becomes particularly awkward is when constructing loops or conditionals. They are metaprogrammed using a higher-order function which takes a Python function representing the loop body or branches as an input.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-n">constant</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
+<span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">less</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">10</span><span class="tok-p">)</span>
+<span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">add</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">)</span>
+<span class="tok-n">r</span> <span class="tok-o">=</span> <span class="tok-n">while_loop</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">b</span><span class="tok-p">,</span> <span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">])</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>While this makes sense in the context of TensorFlow&#8217;s underlying 'language' being a dataflow graph (and hence, in a way, functional), it also leads to an unnatural way of expressing loops in Python. Most people would prefer the imperative formulation.</p>
+</div>
+<div class="listingblock">
+<div class="title">Myia</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span>
+<span class="tok-k">while</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-mi">10</span><span class="tok-p">:</span>
+    <span class="tok-n">i</span> <span class="tok-o">+=</span> <span class="tok-mi">1</span></code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_syntactic_sugar_array_construction">Syntactic sugar: Array construction</h3>
+<div class="paragraph">
+<p>We can add a small amount of syntactic sugar to the new language to simplify some common use cases.</p>
+</div>
+<div class="paragraph">
+<p>For example, in standard Python (i.e. NumPy or operator overloading frameworks) arrays are declared and initialized through object initialization.</p>
 </div>
 <div class="listingblock">
 <div class="title">NumPy</div>
@@ -998,379 +1364,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_managing_state">Managing state</h3>
-<div class="paragraph">
-<p>Since our expressions are mathematical, most operations in the language are naturally pure functions. Three exceptions come to mind:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>I/O</p>
-</li>
-<li>
-<p>Random numbers</p>
-</li>
-<li>
-<p>In-place operations</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>We can deal with I/O and random number generators in an ad-hoc manner, defining them as atomic operations that modify some global state (I/O and the seed respectively).</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-k">def</span> <span class="tok-nf">hello</span><span class="tok-p">():</span>
-    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;hello&#39;</span><span class="tok-p">)</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">world</span><span class="tok-p">():</span>
-    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-s1">&#39;world&#39;</span><span class="tok-p">)</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="tok-n">hello</span><span class="tok-p">()</span>
-    <span class="tok-n">world</span><span class="tok-p">()</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>This function can print <code>hello</code> and then <code>world</code>, or <code>world</code> and then <code>hello</code></td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>However, this would introduce non-determinism in calls to the random number generator (since instruction order is not guaranteed). This can be addressed by allowing the user to explicitly carry around the RNG&#8217;s state if they choose to do so.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
-    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
-    <span class="tok-k">return</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">):</span>
-    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">rng</span><span class="tok-o">.</span><span class="tok-n">normal</span><span class="tok-p">()</span>
-    <span class="tok-k">return</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">seed</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
-    <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">rng</span> <span class="tok-o">=</span> <span class="tok-n">g</span><span class="tok-p">(</span><span class="tok-n">rng</span><span class="tok-p">)</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>By explicitly passing through the random number generator, we force <code>g</code> to be evaluated after <code>f</code>, which means that <code>x</code> and <code>y</code> are sampled deterministically.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Modifying array elements is awkward in a purely functional setting. The Python syntax for modifying an array element, <code>y[i] = x</code>, assumes mutability.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span> <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
-    <span class="tok-n">x</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
-    <span class="tok-k">return</span> <span class="tok-n">x</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">x</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">0</span><span class="tok-p">}</span>
-    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">)</span>
-    <span class="tok-nb">print</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In Python this would print <code>{1}, {1}</code>, but given that our arrays are immutable, this would have to print <code>{0}, {1}</code>.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>In a purely functional context this syntax is unclear. Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, this requires a special syntax. Also, in general we cannot allow the user to force in-place operations, because the original array might be needed for the backward pass of reverse mode AD. Other languages, such as OCaml, have a special syntax for constructing new objects which are modifications of an immutable object (something like <code>y = {x with x[0] = 2}</code>). For Myia, there are two options:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Give <code>y[i] = x</code> the semantics of a destructive assignment statement (<code>y = y with y[i] = x</code>) instead of mutation. This is clean, but possibly confusing to a user who expects in-place mutation (see example above).</p>
-</li>
-<li>
-<p>Introduce something similar to OCaml&#8217;s "functional update syntax". More verbose and less standard, but more explicit. It also allows multiple mutations to be grouped together, which is more efficient (but a compiler could perform this grouping automatically).</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
-    <span class="tok-k">with</span> <span class="tok-n">x</span> <span class="tok-k">as</span> <span class="tok-n">y</span><span class="tok-p">:</span>
-        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">0</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">2</span>
-        <span class="tok-n">y</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-mi">1</span>
-    <span class="tok-k">return</span> <span class="tok-n">y</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_control_flow">Control flow</h3>
-<div class="paragraph">
-<p>One of the cases in which TensorFlow and Theano&#8217;s approach becomes particularly awkward is when constructing loops or conditionals. They are metaprogrammed using a higher-order function which takes a Python function representing the loop body or branches as an input.</p>
-</div>
-<div class="listingblock">
-<div class="title">TensorFlow</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-n">constant</span><span class="tok-p">(</span><span class="tok-mi">0</span><span class="tok-p">)</span>
-<span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">less</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">10</span><span class="tok-p">)</span>
-<span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-k">lambda</span> <span class="tok-n">i</span><span class="tok-p">:</span> <span class="tok-n">add</span><span class="tok-p">(</span><span class="tok-n">i</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">)</span>
-<span class="tok-n">r</span> <span class="tok-o">=</span> <span class="tok-n">while_loop</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">b</span><span class="tok-p">,</span> <span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">])</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>While this makes sense in the context of TensorFlow&#8217;s underlying 'language' being a dataflow graph (and hence, in a way, functional), it also leads to an unnatural way of expressing loops in Python. Most people would prefer the imperative formulation.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span>
-<span class="tok-k">while</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-mi">10</span><span class="tok-p">:</span>
-    <span class="tok-n">i</span> <span class="tok-o">+=</span> <span class="tok-mi">1</span></code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_managing_parameters">Managing parameters</h3>
-<div class="paragraph">
-<p>Modern machine learning models can have a large number of parameters. Managing these parameter sets and manipulating them (e.g., updating them, calculating norms) should be easy. In TensorFlow and Theano this is generally not an issue, since powerful metaprogramming can be used; looping over a parameter collection in Python results in parallel operations in the object language. In other frameworks (e.g. Torch) an object-oriented approach is used instead, where the parameters are part of the state of some operator (layer).</p>
-</div>
-<div class="paragraph">
-<p>Neither of these approaches works in our case. One could consider closures to avoid explicitly passing around large parameter collections in a functional setting, but this syntax is troublesome in the context of parameter updates and AD. Once variables have been closed over, it becomes difficult to define a syntax that allows the user to take derivatives with respect to them.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
-    <span class="tok-n">W</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">)</span>
-    <span class="tok-n">b</span> <span class="tok-o">=</span> <span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">)</span>
-    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
-        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">b</span><span class="tok-p">)</span>
-    <span class="tok-k">return</span> <span class="tok-n">layer</span>
-
-<span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-c1"># grad(perceptron, wrt=W, b) </span><i class="conum" data-value="2"></i><b>(2)</b>
-<span class="tok-c1"># W = W - lr * dW </span> <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The model is a function closed over the parameters.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>However, how do we take the gradient with respect to these parameters if they are not in scope?</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>And how do we rebind updated parameters?</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>If we have to pass around large collections of parameters, it is important that this can be done with a clean syntax and with support for operating over the entire collection. Records (structs, or <code>namedtuple</code> in Python) should be supported, and we will introduce a function, <code>walk</code>, which applies a function to each array member in a potentially nested set of records.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">create_layer</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">):</span>
-    <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">Record</span><span class="tok-p">(</span><span class="tok-n">W</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">,</span> <span class="tok-n">dim</span><span class="tok-p">),</span> <span class="tok-n">b</span><span class="tok-o">=</span><span class="tok-n">randn</span><span class="tok-p">(</span><span class="tok-n">dim</span><span class="tok-p">))</span> <i class="conum" data-value="1"></i><b>(1)</b>
-    <span class="tok-k">def</span> <span class="tok-nf">layer</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
-        <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">sigmoid</span><span class="tok-p">(</span><span class="tok-n">x</span> <span class="tok-o">@</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">W</span> <span class="tok-o">+</span> <span class="tok-n">weights</span><span class="tok-o">.</span><span class="tok-n">b</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
-    <span class="tok-k">return</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">layer</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">model</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">):</span>
-    <span class="tok-n">y_hat</span> <span class="tok-o">=</span> <span class="tok-n">model</span><span class="tok-p">(</span><span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">)</span>
-    <span class="tok-k">return</span> <span class="tok-n">loss</span><span class="tok-p">(</span><span class="tok-n">y_hat</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">step</span><span class="tok-p">(</span><span class="tok-n">parameter</span><span class="tok-p">,</span> <span class="tok-n">gradient</span><span class="tok-p">):</span>
-    <span class="tok-k">return</span> <span class="tok-n">parameter</span> <span class="tok-o">-</span> <span class="tok-mf">0.1</span> <span class="tok-o">*</span> <span class="tok-n">gradient</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">train</span><span class="tok-p">(</span><span class="tok-n">dataset</span><span class="tok-p">):</span>
-    <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span> <span class="tok-o">=</span> <span class="tok-n">create_layer</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">)</span> <i class="conum" data-value="3"></i><b>(3)</b>
-    <span class="tok-k">for</span> <span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-ow">in</span> <span class="tok-n">dataset</span><span class="tok-p">:</span>
-        <span class="tok-n">grads</span> <span class="tok-o">=</span> <span class="tok-n">grad</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">wrt</span><span class="tok-o">=</span><span class="tok-n">weights</span><span class="tok-p">)(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">,</span> <span class="tok-n">perceptron</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">)</span> <i class="conum" data-value="4"></i><b>(4)</b>
-        <span class="tok-n">weights</span> <span class="tok-o">=</span> <span class="tok-n">walk</span><span class="tok-p">(</span><span class="tok-n">step</span><span class="tok-p">,</span> <span class="tok-n">weights</span><span class="tok-p">,</span> <span class="tok-n">grads</span><span class="tok-p">)</span> <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Here we construct a record using a similar syntax to <code>dict()</code>. This forces all fields to be strings.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>To keep the notation clean we use the same notation as for <code>namedtuple</code> objects in Python, instead of the more verbose dictionary notation <code>parameters['W']</code>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Construct models by returning a function and a set of parameters.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Gradients can be taken with respect to collections. The gradient will be a similarly structured collection containing the gradients of the variables.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>The collection of weights is updated, returning a new collection of the same structure.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>The question as to if and how records can be mutated is the same as for arrays. Here too we can either allow for a destructive assignment syntax, or introduce a new functional update syntax.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_lists">Lists</h3>
-<div class="paragraph">
-<p>Besides records, our language should have one more data structure: lists. Lists are useful for the implementation of many algorithms e.g., quasi-Newton methods require keeping a history of gradients. Unlike Python, static typing mandates that these lists are typed. Theano has such a data structure, called <a href="http://deeplearning.net/software/theano/library/typed_list.html"><code>typed_list</code></a>.</p>
-</div>
-<div class="paragraph">
-<p>We&#8217;ll use a functional syntax here, concatenating lists instead of mutating them in-place. However, we can refer back to the discussion on array and record mutation here as well.</p>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[</span><span class="tok-mi">3</span><span class="tok-p">]</span>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[{</span><span class="tok-mi">3</span><span class="tok-p">,</span> <span class="tok-mi">4</span><span class="tok-p">,</span> <span class="tok-mi">5</span><span class="tok-p">}]</span>
-    <span class="tok-n">l</span> <span class="tok-o">=</span> <span class="tok-n">l</span> <span class="tok-o">+</span> <span class="tok-p">[[]]</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>This would raise a compile-time error, because <code>[[]]</code> is a list of lists, which cannot be concatenated with <code>l</code>, a list of arrays.</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_concurrency">Concurrency</h3>
-<div class="paragraph">
-<p>Concurrency is complicated in machine learning frameworks. We are dealing with many levels of concurrency:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Array operations are performed in parallel on devices (e.g., using SIMD or CUDA instructions)</p>
-</li>
-<li>
-<p>A single device can perform multiple operations in parallel (e.g., using multiple threads or CUDA streams)</p>
-</li>
-<li>
-<p>Multiple devices can operate in parallel (CPU and any number of GPUs)</p>
-</li>
-<li>
-<p>Separate hosts can work in parallel (distributed computing)</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>Different levels of concurrency are handled differently by existing frameworks.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>The lowest level of parallelism is often implicit, automatically using SIMD instructions and multiple threads.</p>
-</li>
-<li>
-<p>Performing multiple operations in parallel on a single device is generally not done in TensorFlow and Theano, because the assumption is that a single instruction can saturate the device. This isn&#8217;t always the case though, which is why e.g. MXNet schedules its operations round-robin style on multiple CUDA streams. PyTorch allows for this kind of parallelism by supporting Python&#8217;s <code>multiprocessing</code> module and providing some primitives in the <code>nn.parrallel</code> module.</p>
-</li>
-<li>
-<p>Theano and TensorFlow allow you to associate devices to operations. If data needs to be transferred between devices, this is represented using <code>Send</code>/<code>Receive</code> or <code>transfer</code> nodes in TensorFlow and Theano respectively.</p>
-</li>
-<li>
-<p>Distributed computation is generally supported through separate modules such as Platoon for Theano, <code>tf.train.Server</code> for TensorFlow, and <code>torch.distributed</code> for PyTorch. These frameworks have different levels of abstraction.</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>If a language is purely functional we can theoretically parallelize the program automatically. However, in practice we still need to give the user control over both the location of data and execution.</p>
-</div>
-<div class="paragraph">
-<p>Note however that a single operation could span multiple devices (e.g., NCCL&#8217;s primitives) and that a single array can be shared by several devices (e.g., multiple CUDA streams can access the same memory). However, we can associate a single device to each operation, and if we do not allow the user to act on the data lock-free (note that this makes implementing HogWild-style algorithms impossible) we can say that each value belongs to a single device at a given time. We can then manage concurrency through message passing (shared memory is much harder to reconcile with a functional language and is more difficult to reason about).</p>
-</div>
-<div class="paragraph">
-<p>There are several approaches to message passing. Two common ones are communication sequential processes (CSP), which is used by Go, and the actor model, used by languages such as Erlang and Scala. CSP is synchronous whereas the actor model is asynchronous. CSP can be seen as a special case of the actor model with a zero queue size i.e. the message is not sent until the receiver is ready to accept it. However, asynchronous CSP variations exist (e.g., Clojure&#8217;s async module or Go&#8217;s buffered channels). The advantage of using channels instead of actors is that they can be naturally typed.</p>
-</div>
-<div class="sidebarblock">
-<div class="content">
-<div class="paragraph">
-<p>TODO: Figure out Go-like channel primitives that can be used to do multi-device computing. Main question: How to deal with primitives whose inputs are on different devices? We can decouple data locality and execution, but that becomes very verbose.</p>
-</div>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Myia</div>
-<div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
-    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
-
-<span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">np</span><span class="tok-o">.</span><span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
-    <span class="tok-n">send</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span><span class="tok-p">)</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">):</span>
-    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">recv</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">)</span>
-    <span class="tok-k">return</span> <span class="tok-n">y</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
-
-<span class="tok-nd">@myia</span>
-<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
-    <span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-n">channel</span><span class="tok-p">()</span>
-    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu1</span><span class="tok-p">)</span> <i class="conum" data-value="2"></i><b>(2)</b>
-    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">g</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu2</span><span class="tok-p">)</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Should the data automatically be transferred to the GPU? We might want to execute a custom operator on the GPU which uses both CPU and GPU data.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Run different functions on different devices and allow them to communicate through a channel.</td>
-</tr>
-</table>
-</div>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -1382,12 +1375,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect2">
 <h3 id="_type_declaration">Type declaration</h3>
 <div class="paragraph">
-<p>Although Python&#8217;s list syntax allows us to cleanly define vectors (<code>x = [1, 2, 3]</code>) it doesn&#8217;t easily allow us to specify the floating-point precision, which is necessary for high-performance computing. We could use Python&#8217;s list syntax with variable annotations to accomplish this instead.</p>
+<p>Although Python&#8217;s list and set syntaxes allow us to cleanly define vectors (<code>x = {1, 2, 3}</code>), they don&#8217;t easily allow us to specify the floating-point precision, which is necessary for high-performance computing. Python 3 introduced variable type annotations which could be used for this.</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">double</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">]</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">double</span> <span class="tok-o">=</span> <span class="tok-p">{</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">}</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -1418,13 +1411,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </table>
 </div>
 <div class="paragraph">
-<p>The same syntax can be used for arbitrary complex types.</p>
+<p>The same syntax can be used for arbitrary complex types. Python&#8217;s approach to generic typing is worked out in the <a href="https://docs.python.org/3/library/typing.html"><code>typing</code></a> module.</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">Matrix</span><span class="tok-p">[</span><span class="tok-n">symmetric</span><span class="tok-o">=</span><span class="tok-kc">True</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-p">[[</span><span class="tok-mi">2</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">],</span>
-                             <span class="tok-p">[</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">]]</span></code></pre>
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">x</span><span class="tok-p">:</span> <span class="tok-n">Matrix</span><span class="tok-p">[</span><span class="tok-n">symmetric</span><span class="tok-o">=</span><span class="tok-kc">True</span><span class="tok-p">]</span> <span class="tok-o">=</span> <span class="tok-p">{{</span><span class="tok-mi">2</span><span class="tok-p">,</span> <span class="tok-mi">1</span><span class="tok-p">},</span>
+                             <span class="tok-p">{</span><span class="tok-mi">1</span><span class="tok-p">,</span> <span class="tok-mi">2</span><span class="tok-p">}}</span></code></pre>
 </div>
 </div>
 </div>
@@ -1535,53 +1528,115 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 <div class="sect1">
-<h2 id="_implementation">Implementation</h2>
+<h2 id="_concurrency">Concurrency</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_functions">Functions</h3>
 <div class="paragraph">
-<p>Most languages have the concept of functions. In TensorFlow and Theano functions exist in the metalanguage, but they do not necessarily correspond to functions in the object language, unless they are passed to higher-order operations such as <code>while</code> or <code>map</code>, or when explicitly constructed using Theano&#8217;s <code>OpFromGraph</code> or XLA&#8217;s <code>ComputationBuilder</code> primitives. This means that although some advantages of functions are available through the metalangage (e.g. reducing code duplication, enabling code reuse), others are not. In particular, it is not easy to trace a runtime error to a particular function call, and computation graphs might include large amounts of duplicate code. This increases the program size and the amount of duplicate work performed by optimizing passes. In a way, it can be seen as Theano and TensorFlow inlining every function call by default.</p>
+<p>Concurrency is complicated in machine learning frameworks. We are dealing with many levels of concurrency:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Array operations are performed in parallel on devices (e.g., using SIMD or CUDA instructions)</p>
+</li>
+<li>
+<p>A single device can perform multiple operations in parallel (e.g., using multiple threads or CUDA streams)</p>
+</li>
+<li>
+<p>Multiple devices can operate in parallel (CPU and any number of GPUs)</p>
+</li>
+<li>
+<p>Separate hosts can work in parallel (distributed computing)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Different levels of concurrency are handled differently by existing frameworks.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The lowest level of parallelism is often implicit, automatically using SIMD instructions and multiple threads.</p>
+</li>
+<li>
+<p>Performing multiple operations in parallel on a single device is generally not done in TensorFlow and Theano, because the assumption is that a single instruction can saturate the device. This isn&#8217;t always the case though, which is why e.g. MXNet schedules its operations round-robin style on multiple CUDA streams. PyTorch allows for this kind of parallelism by supporting Python&#8217;s <code>multiprocessing</code> module and providing some primitives in the <code>nn.parrallel</code> module.</p>
+</li>
+<li>
+<p>Theano and TensorFlow allow you to associate devices to operations. If data needs to be transferred between devices, this is represented using <code>Send</code>/<code>Receive</code> or <code>transfer</code> nodes in TensorFlow and Theano respectively.</p>
+</li>
+<li>
+<p>Distributed computation is generally supported through separate modules such as Platoon for Theano, <code>tf.train.Server</code> for TensorFlow, and <code>torch.distributed</code> for PyTorch. These frameworks have different levels of abstraction.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>If a language is purely functional we can theoretically parallelize the program automatically. However, in practice we still need to give the user control over both the location of data and execution.</p>
+</div>
+<div class="paragraph">
+<p>Note however that a single operation could span multiple devices (e.g., NCCL&#8217;s primitives) and that a single array can be shared by several devices (e.g., multiple CUDA streams can access the same memory). However, we can associate a single device to each operation, and if we do not allow the user to act on the data lock-free (note that this makes implementing HogWild-style algorithms impossible) we can say that each value belongs to a single device at a given time. We can then manage concurrency through message passing (shared memory is much harder to reconcile with a functional language and is more difficult to reason about).</p>
+</div>
+<div class="paragraph">
+<p>There are several approaches to message passing. Two common ones are communication sequential processes (CSP), which is used by Go, and the actor model, used by languages such as Erlang and Scala. CSP is synchronous whereas the actor model is asynchronous. CSP can be seen as a special case of the actor model with a zero queue size i.e. the message is not sent until the receiver is ready to accept it. However, asynchronous CSP variations exist (e.g., Clojure&#8217;s async module or Go&#8217;s buffered channels). The advantage of using channels instead of actors is that they can be naturally typed.</p>
 </div>
 <div class="listingblock">
-<div class="title">TensorFlow</div>
+<div class="title">Myia</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span>
-    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">y</span>
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
 
-<span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">),</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">)</span>
-<span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">f</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span><span class="tok-p">):</span>
+    <span class="tok-n">send</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">x</span> <span class="tok-o">*</span> <span class="tok-mi">2</span><span class="tok-p">)</span> <i class="conum" data-value="5"></i><b>(5)</b>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">g</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">):</span>
+    <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">recv</span><span class="tok-p">(</span><span class="tok-n">c</span><span class="tok-p">)</span> <i class="conum" data-value="6"></i><b>(6)</b>
+    <span class="tok-k">return</span> <span class="tok-n">y</span> <span class="tok-o">*</span> <span class="tok-mi">2</span>
+
+<span class="tok-nd">@myia</span>
+<span class="tok-k">def</span> <span class="tok-nf">main</span><span class="tok-p">():</span>
+    <span class="tok-n">c</span> <span class="tok-o">=</span> <span class="tok-n">channel</span><span class="tok-p">(</span><span class="tok-n">dest</span><span class="tok-o">=</span><span class="tok-n">gpu2</span><span class="tok-p">,</span> <span class="tok-n">buffer</span><span class="tok-o">=</span><span class="tok-mi">10</span><span class="tok-p">)</span>  <i class="conum" data-value="2"></i><b>(2)</b> <i class="conum" data-value="3"></i><b>(3)</b>
+    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">f</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">ones</span><span class="tok-p">(</span><span class="tok-mi">10</span><span class="tok-p">),</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu1</span><span class="tok-p">)</span> <i class="conum" data-value="4"></i><b>(4)</b>
+    <span class="tok-n">spawn</span><span class="tok-p">(</span><span class="tok-n">g</span><span class="tok-p">,</span> <span class="tok-n">c</span><span class="tok-p">,</span> <span class="tok-n">device</span><span class="tok-o">=</span><span class="tok-n">gpu2</span><span class="tok-p">)</span></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>In the resulting computation graph there is no trace of the function <code>plus</code>.</td>
+<td><code>spawn</code> launches a function with the given arguments on a particular device. Devices can be virtual as in <code>cpu:0</code> and <code>cpu:1</code> could refer to launching functions in separate threads. The default behavior of <code>spawn</code> is to transfer the arguments to the device that the function is launched on. However, a <code>spawn_nocopy</code> function could be introduced which leaves the arguments as is.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>A channel can be used to send and receive messages. Channels can optionally be associated with a destination, in which case any message sent through the channel will be transferred to the memory of that device.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Similarly to Go the channel can have an optional buffer. By default there is no buffer, which means that the message passing is synchronous.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Channels are first class values which can be passed as arguments to (potentially multiple) functions.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Note that channels are typed. By default they send arrays, so trying to send a list or named tuple over them would result in a type error.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>The value <code>y</code> was transferred to <code>gpu2</code> because of the destination set on the channel, which means that <code>y * 2</code> is a valid operation.</td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Eschewing the metaprogramming approach means that functions can naturally become part of the intermediate representation, and inlining can become optional instead of the default.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_persistent_data_structures">Persistent data structures</h3>
-<div class="paragraph">
-<p>Persistent data structures are efficient immutable data structures. Their use is very natural in automatic differentiation: During the reverse pass we might need the values from the original forward pass. This means that we need to be able to access any previous version of a data structure (e.g., array or list). This is exactly the functionality which persistent data structures provide.</p>
-</div>
-<div class="paragraph">
-<p>For lists, we can use linked lists, a traditional persistent data structure used in functional languages. This allows us to access any version of the list during backpropagation.</p>
-</div>
-<div class="sect3">
-<h4 id="_arrays">Arrays</h4>
-<div class="paragraph">
-<p>We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. This data structure is described in [<a href="#Conchon:2007:PUD:1292535.1292541">4</a>] and exists in Haskell as <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>.</p>
-</div>
-<div class="paragraph">
-<p>The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in.</p>
-</div>
-</div>
-</div>
+<div class="sect1">
+<h2 id="_implementation">Implementation</h2>
+<div class="sectionbody">
 <div class="sect2">
 <h3 id="_automatic_differentiation">Automatic differentiation</h3>
 <div class="paragraph">
@@ -1756,10 +1811,10 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <p>Although SCT reverses the control flow of the program ahead of time, there is still a runtime component: A queue is used to store intermediate values for use by the adjoint functions. This complicates static analysis and optimizations, since many rules need to give this tape special consideration. For example, if dead code elimination determines that a push or pop statement can be removed, its corresponding pop or push statement must also be removed. And in order to take higher order derivatives, differentiation rules for this tape are needed. One way of looking at SCT is that the tape used to restore the state of the program so that the adjoint can be executed in the same lexical scope as the original statement.</p>
 </div>
 <div class="paragraph">
-<p>From a functional programming perspective, we have a more natural tool available to store the state of a program: Closures are records of functions together with an environment. This is the idea explored in [<a href="#Pearlmutter:2008:RAF:1330017.1330018">5</a>] and implemented in e.g. <a href="http://www.bcl.hamilton.ie/~qobi/stalingrad/">Stalingrad</a> and derived projects such as <a href="https://diffsharp.github.io/DiffSharp/">DiffSharp</a> and <a href="https://github.com/axch/dysvunctional-language">DVL</a>.</p>
+<p>From a functional programming perspective, we have a more natural tool available to store the state of a program: Closures are records of functions together with an environment. This is the idea explored in [<a href="#Pearlmutter:2008:RAF:1330017.1330018">4</a>] and implemented in e.g. <a href="http://www.bcl.hamilton.ie/~qobi/stalingrad/">Stalingrad</a> and derived projects such as <a href="https://diffsharp.github.io/DiffSharp/">DiffSharp</a> and <a href="https://github.com/axch/dysvunctional-language">DVL</a>.</p>
 </div>
 <div class="paragraph">
-<p>The following Python code illustrates the concept of the transformation discussed on p. 17 of [<a href="#Pearlmutter:2008:RAF:1330017.1330018">5</a>]. It correctly calculates \(\frac{d}{dx}\tanh(\exp(x)) = (1 - \tanh^2(\exp(x))) \cdot \exp(x)\).</p>
+<p>The following Python code illustrates the concept of the transformation discussed on p. 17 of [<a href="#Pearlmutter:2008:RAF:1330017.1330018">4</a>]. It correctly calculates \(\frac{d}{dx}\tanh(\exp(x)) = (1 - \tanh^2(\exp(x))) \cdot \exp(x)\).</p>
 </div>
 <div class="listingblock">
 <div class="title">Myia</div>
@@ -1807,18 +1862,81 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <p>The main difficulty of this approach lies in dealing with higher order derivatives, which requires taking the derivative with respect to closed over variables. This <a href="https://gist.github.com/bartvm/1441575c066d98af9a2fb57d681267e6">notebook</a> illustrates how this is solved.</p>
 </div>
 <div class="paragraph">
-<p>Note that the use of closures doesn&#8217;t magically eliminate the need to store intermediate variables; it simply uses closures as the way of storing them at runtime instead of using a queue. The advantage is that the compiler does not need to give the automatic differentiation code any special consideration, since all the desired optimizations can be handled by more general optimizations such as closure elimination, inlining, lambda lifiting, etc.</p>
+<p>Note that the use of closures doesn&#8217;t magically eliminate the need to store intermediate variables; it simply uses closures as the way of storing them at runtime instead of using a queue. The advantage is that the compiler does not need to give the automatic differentiation code any special consideration, since all the desired optimizations can be handled by general optimizations such as closure elimination, inlining, lambda lifiting, etc.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_persistent_data_structures">Persistent data structures</h3>
+<div class="paragraph">
+<p><a href="https://en.wikipedia.org/wiki/Persistent_data_structure">Persistent data structures</a> are commonly used in functional programming, and they are a very natural fit for automatic differentiation: During the reverse pass we might need the values from the original forward pass. This means that we need to be able to access any previous version of a data structure (e.g., array or list). This is exactly the functionality which persistent data structures provide.</p>
+</div>
+<div class="paragraph">
+<p>For lists, we can use linked lists, a traditional persistent data structure used in functional languages.</p>
+</div>
+<div class="sect3">
+<h4 id="_arrays">Arrays</h4>
+<div class="paragraph">
+<p>We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. This data structure is described in [<a href="#Conchon:2007:PUD:1292535.1292541">5</a>] and exists in Haskell as <a href="https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29">DiffArray</a>.</p>
+</div>
+<div class="paragraph">
+<p>The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>It is interesting to note that in the traditional SCT approach, the way that array updates are handled is equivalent: The overwritten entries are stored on the tape and restored during the backward pass.</p>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_intermediate_representation">Intermediate representation</h3>
-<div class="sidebarblock">
-<div class="content">
 <div class="paragraph">
-<p>TODO: Talk about different graph representations (Theano and TensorFlow, but also classical ones like sea-of-nodes, and the proposed functional graph representation used by Thorin).</p>
+<p>Compilers use many different intermediate representations. Traditional compilers such as GCC will usually represent blocks of code as instruction streams (e.g. in RTL or GIMPLE), but represent the control flow (branching and loops) using a graph (the control flow graph, CFG).</p>
+</div>
+<div class="paragraph">
+<p>Some modern compilers use directed acyclic graphs (DAGs) instead of instruction streams to represent basic blocks of code. The nodes represent instructions and the edges data dependencies. An example of this is the the sea-of-nodes representation used by the <a href="https://wiki.openjdk.java.net/display/HotSpot/Compiler">Java HotSpot compiler</a> and the <a href="https://docs.google.com/presentation/d/1Z9iIHojKDrXvZ27gRX51UxHD-bKf1QcPzSijntpMJBM/edit#slide=id.p">TurboFan JavasScript compiler</a> in Chrome V8. The lack of ordering simplifies certain optimizations and scheduling.</p>
+</div>
+<div class="paragraph">
+<p>Machine learning frameworks adopted graph representations early on. They are a clean way of representing mathematical relationships. Especially in the absence of memory aliasing and IEEE 754 compliance they are a natural representation on which to apply algebraic simplifications and formula rewriting. These graphs were later extended to support higher-order functions in order to support loops i.e. a graph becomes the input to a node in another graph. When the gradient of such a graph is taken, dependencies arise between these nested graphs (nodes become stateful).</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="https://www.tensorflow.org/versions/r1.1/images/ops_while.png" alt="While loop">
+</div>
+<div class="title">Figure 1. A while loop in XLA/TensorFlow</div>
+</div>
+<div class="paragraph">
+<p>For Myia we would like to use a graph representation, but one with native support for closures and higher-order functions, so that the backpropagator approach to reverse mode AD can be applied naturally. One such intermediate representation is described in [<a href="#LeiBa:2015:GHI:2738600.2738626">2</a>].</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_functions">Functions</h3>
+<div class="paragraph">
+<p>Most languages have the concept of functions. In TensorFlow and Theano functions exist in the metalanguage, but they do not necessarily correspond to functions in the object language, unless they are passed to higher-order operations such as <code>while</code> or <code>map</code>, or when explicitly constructed using Theano&#8217;s <code>OpFromGraph</code> or XLA&#8217;s <code>ComputationBuilder</code> primitives. This means that although some advantages of functions are available through the metalangage (e.g. reducing code duplication, enabling code reuse), others are not. In particular, it is not easy to trace a runtime error to a particular function call, and computation graphs might include large amounts of duplicate code. This increases the program size and the amount of duplicate work performed by optimizing passes. In a way, it can be seen as Theano and TensorFlow inlining every function call by default.</p>
+</div>
+<div class="listingblock">
+<div class="title">TensorFlow</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="python3"><span class="tok-k">def</span> <span class="tok-nf">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">):</span>
+    <span class="tok-k">return</span> <span class="tok-n">x</span> <span class="tok-o">+</span> <span class="tok-n">y</span>
+
+<span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span> <span class="tok-o">=</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">),</span> <span class="tok-n">placeholder</span><span class="tok-p">(</span><span class="tok-n">float32</span><span class="tok-p">)</span>
+<span class="tok-n">z</span> <span class="tok-o">=</span> <span class="tok-n">plus</span><span class="tok-p">(</span><span class="tok-n">x</span><span class="tok-p">,</span> <span class="tok-n">y</span><span class="tok-p">)</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>In the resulting computation graph there is no trace of the function <code>plus</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Eschewing the metaprogramming approach means that functions can naturally become part of the intermediate representation, and inlining can become optional instead of the default.</p>
 </div>
 </div>
 </div>
@@ -1838,10 +1956,10 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 <p><a id="Click:1995:SGI:202529.202534"></a>C. Click and M. Paleczny, “A Simple Graph-based Intermediate Representation,” in <em>Papers from the 1995 ACM SIGPLAN Workshop on Intermediate Representations</em>, New York, NY, USA, 1995, pp. 35–49.</p>
 </li>
 <li>
-<p><a id="Conchon:2007:PUD:1292535.1292541"></a>S. Conchon and J.-C. Filliâtre, “A Persistent Union-find Data Structure,” in <em>Proceedings of the 2007 Workshop on Workshop on ML</em>, New York, NY, USA, 2007, pp. 37–46.</p>
+<p><a id="Pearlmutter:2008:RAF:1330017.1330018"></a>B. A. Pearlmutter and J. M. Siskind, “Reverse-mode AD in a Functional Framework: Lambda the Ultimate Backpropagator,” <em>ACM Trans. Program. Lang. Syst.</em>, vol. 30, no. 2, pp. 7:1–7:36, Mar. 2008.</p>
 </li>
 <li>
-<p><a id="Pearlmutter:2008:RAF:1330017.1330018"></a>B. A. Pearlmutter and J. M. Siskind, “Reverse-mode AD in a Functional Framework: Lambda the Ultimate Backpropagator,” <em>ACM Trans. Program. Lang. Syst.</em>, vol. 30, no. 2, pp. 7:1–7:36, Mar. 2008.</p>
+<p><a id="Conchon:2007:PUD:1292535.1292541"></a>S. Conchon and J.-C. Filliâtre, “A Persistent Union-find Data Structure,” in <em>Proceedings of the 2007 Workshop on Workshop on ML</em>, New York, NY, USA, 2007, pp. 37–46.</p>
 </li>
 </ol>
 </div>
@@ -1859,7 +1977,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-08 13:15:47 EDT
+Last updated 2017-09-10 17:59:20 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
