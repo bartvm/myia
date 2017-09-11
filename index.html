@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -907,7 +908,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_language_design">Language design</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The 'language' we will sketch out will effectively be a subset of Python, but with some of the semantics changed in order for the language to be purely functional and statically typed.</p>
+<p>The 'language' we will sketch out will effectively be a subset of Python, but with some of the semantics changed in order for the language to be purely functional and statically typed. In order to stay close to Python&#8217;s original syntax, the purely functional nature of Myia is more strongly reflected in the language&#8217;s implementation than it is in the actual syntax.</p>
 </div>
 <div class="paragraph">
 <p>In summary, the language will be:</p>
@@ -1296,8 +1297,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="python3"><span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span>
 <span class="tok-k">while</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-mi">10</span><span class="tok-p">:</span>
-    <span class="tok-n">i</span> <span class="tok-o">+=</span> <span class="tok-mi">1</span></code></pre>
+    <span class="tok-n">i</span> <span class="tok-o">+=</span> <span class="tok-mi">1</span> <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Here too there is friction between Python&#8217;s imperative and Myia&#8217;s functional nature. The operator <code>i += 1</code> should be considered a destructive assignment i.e. it creates a new value <code>i</code> whose value is the original <code>i</code> plus one.</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -1977,7 +1986,7 @@ w &amp;= e^z &amp; \dot{w} &amp;= \dot{z}e^{z}
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-10 17:59:20 EDT
+Last updated 2017-09-11 13:29:44 EDT
 </div>
 </div>
 <script type="text/x-mathjax-config">
