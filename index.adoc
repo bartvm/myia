@@ -1,0 +1,823 @@
+= Myia
+:toc: left
+:toclevels: 3
+:source-highlighter: pygments
+:icons: font
+:bibtex-file: myia.bib
+:stem:
+Bart van Merriënboer <bartvm@google.com>
+
+Myia is the project name for a collection of thoughts and ideas on the topic of deep learning frameworks. More specifically, it is a proposal for the development of a purely functional domain-specific language (DSL) for machine learning as well as thoughts on how it should be implemented.
+
+== Introduction
+
+Many frameworks for machine learning have been developed in the past few years. In general, these frameworks support:
+
+* High-level mathematical operators on multi-dimensional arrays footnote:[TensorFlow uses the term _tensor_ to be synonymous with _multi-dimensional array_. Technically, a tensor is a function, not a data structure. A tensor can be represented using a multi-dimensional array given a set of basis vectors.]
+* Reverse mode automatic differentiation (AD)
+
+Other popular features are:
+
+* Support for heterogeneous platforms (GPUs) with potentially multiple devices (multi-GPU)
+* High-level algebraic optimizations
+* Ability to deploy on mobile/embedded systems
+
+In this design document I will try to make a case for the development of a DSL which supports all the aforementioned features. I will argue that viewing many of the problems specific to automatic differentiation and array programming through a lens of purely functional programming provides useful insights, and avoids the unnecessary trade-offs that existing frameworks have made between usability and performance.
+
+A sample of some relevant topics:
+
+* Different approaches to integration with the Python ecosystem such as embedding, metaprogramming, or tracing through overloading
+* Programming paradigms that are suited for expressing machine learning models and algorithms e.g. dataflow programming and functional programming with pure functions
+* Type systems for multi-dimensional arrays
+* Intermediate representations and their amenability to AD, in particular in the context of functional languages and graph-based representations
+
+== Python integration
+
+Python is the most popular programming language in machine learning and data science. Python is part of a large ecosystem which includes packages for reading different file formats, visualizing data, etc. Many machine learning frameworks have made Python integration a priority. There are several ways of accomplishing this integration. Here we consider operator overloading, metaprogramming, embedding, and separate languages which compile to CPython extensions.
+
+=== Operator overloading
+
+This approach is the one taken by PyTorch and Autograd. They allow the user to write pure Python code, which is executed by the Python interpreter. Data types and functions are wrapped to trace computations. This can then be used to support AD and tracing JIT style optimizations.
+
+.Autograd
+[source,python3]
+----
+def f(x):
+    return x * x
+
+df = grad(f) <1>
+assert df(4) == 2 <2>
+----
+<1> The `grad` function wraps the function `f` so that its input argument is wrapped with a custom object which tracks the operations applied to it.
+<2> Calling `df` applies `f` to the wrapped object, after which the tape (trace) is extracted and walked in reverse to calculate the gradient.
+
+*Advantages*
+
+* The user can write pure Python including higher order functions, data structures such as lists and dictionaries, logging and visualization, etc.
+* The code is executed (or at least traced) using the Python interpreter and can be debugged using standard Python debugging tools.
+
+*Disadvantages*
+
+* The gradient code is executed by a custom loop which cannot be easily inspected or debugged.
+* Tracing and/or execution requires the Python runtime, which is large, can be slow, and is plagued by the GIL.
+
+=== Metaprogramming
+
+Frameworks such as TensorFlow, Theano, and MXNet use Python to define dataflow (computation) graphs, which are executed using custom runtimes and compilers. MXNet refers to this as _symbolic programming_. We can view this as metaprogramming where Python is the metalanguage used to program the intermediate representation of some object language which is represented as a dataflow graph.
+
+.TensorFlow
+[source,python3]
+----
+x = placeholder(float32) <1>
+y = x * x <2>
+----
+<1> Declare a variable `x` as an input node to the computation graph.
+<2> Add a node to the graph whose value is the multiplication of `x` with itself.
+
+*Advantages*
+
+* Python is used as the metalanguage.
+* The metaprogramming paradigm allows us to modify the resulting program (the graph) which is powerful.
+* A specific programming paradigm can be enforced in the object language which we can optimize and execute efficiently
+* The resulting program in the object language can be constructed and executed separately from the Python interpreter.
+
+*Disadvantages*
+
+* The syntax is verbose.
+* Although Python is used, the user effectively still needs to learn the object language e.g., creating constants, (`constant` in TensorFlow), how variables are constructed (`placeholder`) and initialized (`feed_dict`), and printing (`Print`).
+* There are two languages, two runtimes, two debuggers, even two programming paradigms (e.g. TensorFlow is lazy and functional whereas Python is greedy and imperative) which are not clearly separated.
+
+=== Embedded language
+
+Another approach is for the user to write functions using (a subset of) the Python syntax. Instead of executing these functions using the Python interpreter, a custom framework transforms, interprets, or compiles the function instead. This approach is used by Python compilers such as Numba and Parakeet, and by TensorFlow's graph functions (which compiles Python functions to TensorFlow).
+
+.Numba
+[source,python3]
+----
+@jit <1>
+def f(x):
+    return x * x
+----
+<1> This decorator means that the Python function is compiled using Numba's JIT compiler.
+
+Since the framework in question has complete control over the execution of the 'Python' function, it could completely redefine the semantics of the language, keeping only the syntax the same (e.g. `x * x` could be defined to mean addition).
+
+*Advantages*
+
+* The user can mix Python code and the embedded language (which can be Python or something else).
+* The program written in the embedded language can be constructed and executed separately from the Python interpreter.
+
+*Disadvantages*
+
+* It might confuse the user that the embedded language syntax is a restricted set of Python's and that its semantics were possibly changed from Python, even though the function is in the same file.
+* We need to shoehorn our language into Python's syntax (otherwise the Python interpreter will throw a parsing error).
+
+=== Separate language
+
+The approach taken by, for example, Cython is to construct a separate language which easily compiles to CPython extensions.
+
+.Cython
+[source,cython]
+----
+cdef f(int x): <1>
+    return x * x
+----
+<1> Cython uses a superset of the Python syntax, allowing it to compile more efficient code.
+
+*Advantages*
+
+* Low surprise factor, since there is no confusion about which language gets executed by which runtime.
+* A new language allows us to keep a new, clean syntax while still generating efficient code and enforcing relevant programming paradigms.
+* The numeric program can be constructed and executed separately from the Python interpreter.
+
+*Disadvantages*
+
+* Requires a two-step development process: First compile language to extension, then run Python code which imports extension.
+* Barrier of entry (whether perceived or real) of new language.
+* Forces a possibly awkward separation between numeric and non-numeric code.
+* Requires implementing a bigger toolchain such as a parser.
+
+=== Conclusion
+
+So which approach is best in the case of a machine learning framework? The metaprogramming approach leads to an overly verbose syntax and the cognitive overhead of mixing two languages, whereas the operator overloading approach weds us to the Python interpreter. This leaves us with the options of an embedded language or a separate language.
+
+An embedded language restricts the syntax of our language to Python's. However, we could use variable and argument annotations (introduced in PEP 3107, 484 and 526), overload little used operators such as `<<` and `>>`, introduce new built-ins, etc. As such, it might be feasible to restrict our new language to Python's syntax.
+
+.Python 3
+[source,cython]
+----
+# Some random possibilities
+def f(x: int) -> 'gpu1': <1> <2>
+    y: int = 2 <3>
+    y >> gpu2 <4>
+    z: float = x * log(y) <5> <6>
+    return z
+----
+<1> Set input type.
+<2> Define which device this function should be executed on.
+<3> Declare variable types.
+<4> Send `y` to a different device.
+<5> Allow type casting or checking.
+<6> New built-in `log`.
+
+However, it is worth keeping in mind that having 'Python' functions with entirely different semantics might be confusing to the user. This is the trade-off to make to avoid having separate files and a two-step development process.
+
+Lastly, note that it is likely straightforward to transition from an embedded language to a separate language, but this is not true the other way around.
+
+== Language design
+
+The 'language' we will sketch out will effectively be a subset of Python, but with some of the semantics changed in order for the language to be purely functional and statically typed. In order to stay close to Python's original syntax, the purely functional nature of Myia is more strongly reflected in the language's implementation than it is in the actual syntax.
+
+In summary, the language will be:
+
+* Similar to Python; it will be very natural to use for Python users.
+* Purely functional; Our language should maintain referential transparency, which allows for parallelization and easy reverse mode AD.
+* Imperative syntax for control flow; We want support for Python's `while` and `if` statements, which for many numerical algorithms is a more natural way of expressing control flow than using higher-order operators.
+* Support for higher-order functions; This allows us to naturally express parallel operations such as map and reduce.
+* Support for closures; Support for closures allows us to make the gradient operator closed under its own operation, and hence support higher-order derivatives.footnote:[Closures are required to take higher-order gradients, but do not necessarily need to be exposed to the user.]
+* Array type system with type inference and type checking; Static typing is required to generate efficient code. Having detailed type information about our arrays (shape, diagonality, symmetry, etc.) allows us to generate efficient code and detect shape errors early. We want to support type inference to maintain a clean and succinct syntax.
+* Message-passing primitives; for multi-device computation.
+
+=== Dataflow or functional programming?
+
+Several machine learning frameworks make use of dataflow programming terminology, representing the program as a graph and exposing this representation to the user. Dataflow programming is defined by a set of features which will sound familiar to those familiar with functional languages such as freedom from side effects and single assignment of variables. In fact, "dataflow languages are essentially functional languages with an imperative syntax" cite:[Johnston:2004:ADP:1013208.1013209].
+
+Theano and TensorFlow are perhaps more properly classified as metaprogrammed functional languages with a graph-based intermediate representation, considering that loops are expressed using higher-order operators instead of an imperative syntax. Note that the use of a graph as intermediate representation does not make a language a dataflow language. Graph-based representations exist for functional cite:[LeiBa:2015:GHI:2738600.2738626] and imperative languages cite:[Click:1995:SGI:202529.202534] as well.
+
+Dataflow programming was developed to enable parallelization. Note however that referential transparency and lazy evaluation are sufficient conditions for trivial parallelization. These conditions are met by most purely functional programming languages.
+
+Reasoning about programs as dataflow graphs has been useful for machine learning frameworks because reverse mode AD is simple to reason about on an directed acyclic graph (DAG). However, if not carefully managed, the dataflow programming paradigm can break down when introducing higher-order functions and loops, especiall in the context of AD. The necessity to store variables for backpropagation can quickly introduce statefulness into the program. Note that a graph representation is not essential for AD. Reverse-mode automatic differentiation can be performed on functional and imperative languages as well.
+
+Myia shifts its perspective from dataflow programming to purely functional programming. This means that a graph representation is no longer exposed to the user, but automatic parallelization and AD are still supported.
+
+=== Basics
+
+Before going into more detail, let's consider a basic example which shows the use of function definitions, function calls, unary and binary operators. Note that arrays in principle are immutable.
+
+.Myia
+[source,python3]
+----
+@myia <1>
+def sigmoid(x):
+    return 1 / (1 + exp(-x))
+
+@myia
+def f(w, x, y):
+    y_hat = sigmoid(x @ w)
+    loss = y * log(y_hat) + (1 - y) * log(1 - y_hat)
+    return loss
+
+@myia
+def update(w, x, y):
+    df = grad(f) <2>
+    return w - 0.1 * df(w, x, y), f(w, x, y) <3>
+
+def train(): <4>
+    w = randn(10)
+    for x, y in dataset:
+        w, loss = update(w, x, y)
+----
+<1> The `@myia` decorator is used to distinguish Python and Myia functions.
+<2> Similar to Autograd, the gradient operator is a higher-order function which takes a function as input and returns a gradient function with respect to the first argument.
+<3> Since variables are immutable, we are returning a new array instead of explicitly updating `w`.
+<4> The reading of the dataset happens in Python.
+
+=== Data structures
+
+The immutability of arrays extends to Python data structures i.e. lists and dictionaries must be immutable.
+
+==== Lists
+
+Lists are useful for the implementation of many algorithms e.g., quasi-Newton methods require keeping a history of gradients. Unlike Python, static typing mandates that these lists are typed. Theano has such a data structure, called http://deeplearning.net/software/theano/library/typed_list.html[`typed_list`].
+
+We'll use a functional syntax here, concatenating lists instead of mutating them in-place. We will use the list syntax instead of the tuple syntax though, because tuples are often assumed to have heterogeneously typed elements.
+
+.Myia
+[source,python3]
+----
+@myia
+def main():
+    l = [3] <1>
+    l = l + [4]
+    l = l + [[]] <2>
+----
+<1> The type of `l` is inferred to be `List[Array]`.
+<2> This would raise a compile-time error, because `[[]]` is a list of lists, which cannot be concatenated with `l`, a list of numbers.
+
+==== Records
+
+Modern machine learning models can have a large number of parameters. Managing these parameter sets and manipulating them (e.g., updating them, calculating norms) should be easy. In TensorFlow and Theano this is generally not an issue, since powerful metaprogramming can be used; looping over a parameter collection in Python results in parallel operations in the object language. In other frameworks (e.g. Torch) an object-oriented approach to managing parameters is used instead, where the parameters are part of the state of some operator (layer).
+
+Neither of these approaches works in our case. One could consider closures to avoid explicitly passing around large parameter collections in a functional setting, but this syntax is troublesome for parameter updates and AD. Once variables have been closed over, it becomes difficult to define a syntax that allows the user to take derivatives with respect to them.
+
+.Myia
+[source,python3]
+----
+@myia
+def create_layer(dim):
+    W = randn(dim, dim)
+    b = randn(dim)
+    def layer(x):
+        return x + sigmoid(x @ W + b)
+    return layer
+
+perceptron = create_layer(10) <1>
+# grad(perceptron, wrt=W, b) <2>
+# W = W - lr * dW <3>
+----
+<1> The model is a function closed over the parameters.
+<2> However, how do we take the gradient with respect to these parameters if they are not in scope?
+<3> And how do we rebind updated parameters?
+
+Python does not have immutable dictionaries to store parameters in (and even if it did, it would be hard to allow for type annotations). On the other hand, Python's records (named tuples) can be used for parameter sets, and they allow for type annotations. To make these records easy to operate on we will introduce a function, `walk`, which applies a function to each array member in a potentially nested set of records.
+
+.Myia
+[source,python3]
+----
+@myia <1>
+class Weights(NamedTuple):
+    W: Matrix
+    b: Vector
+
+@myia
+def create_layer(dim):
+    # Weights = namedtuple('Weights', ['W', 'b']) <2>
+    weights = Weights(W=randn(dim, dim), b=randn(dim))
+    def layer(weights, x):
+        return x + sigmoid(x @ weights.W + weights.b)
+    return weights, layer
+
+@myia
+def f(weights, x, y, model):
+    y_hat = model(weights, x)
+    return loss(y_hat, y)
+
+@myia
+def step(parameter, gradient):
+    return parameter - 0.1 * gradient
+
+@myia
+def train(dataset):
+    weights, perceptron = create_layer(10) <3>
+    for x, y in dataset:
+        grads = grad(f)(weights, x, y, perceptron) <4>
+        weights = walk(step, weights, grads) <5>
+----
+<1> The typed version of named tuples is used here.
+<2> Untyped named tuples can also be created, in which case type inference is used.
+<3> Construct models by returning a function and a set of parameters.
+<4> Gradients can be taken with respect to named tuples. The gradient will be a named tuple of the same type, containing the gradients of the variables.
+<5> The `walk` function takes two named tuples and returns a new named tuple with the updated weights.
+
+=== Managing state
+
+Since our expressions are mathematical, most operations in the language are naturally pure functions. Three exceptions come to mind:
+
+* I/O
+* Random numbers
+* Array updates
+
+We can deal with I/O and random number generators in an ad-hoc manner, defining them as atomic operations that modify some global state (I/O and the seed respectively).
+
+.Myia
+[source,python3]
+----
+@myia <1>
+def hello():
+    print('hello')
+
+@myia
+def world():
+    print('world')
+
+@myia
+def main(): <1>
+    hello()
+    world()
+----
+<1> This function can print `hello` and then `world`, or `world` and then `hello`
+
+However, this would introduce non-determinism in calls to the random number generator (since instruction order is not guaranteed). This can be addressed by allowing the user to explicitly carry around the RNG's state if they choose to do so. Alternativelylo, TensorFlow's approach of using a combination of global and local seeds could be used.
+
+.Myia
+[source,python3]
+----
+@myia <1>
+def f(rng):
+    x = rng.normal()
+    return x, rng
+
+@myia
+def g(rng):
+    y = rng.normal()
+    return y, rng
+
+@myia
+def main():
+    rng = seed(0)
+    x, rng = f(rng) <1>
+    y, rng = g(rng)
+----
+<1> By explicitly passing through the random number generator, we force `g` to be evaluated after `f`, which means that `x` and `y` are sampled deterministically.
+
+Although arrays are in principal immutable, the user must be allowed to construct new arrays by updating entries. The Python syntax for modifying an array element, `y[i] = x` however assumes mutability.
+
+.Myia
+[source,python3]
+----
+@myia <1>
+def f(x):
+    x[0] = 1
+    return x
+
+@myia
+def main():
+    x = {0}
+    y = f(x)
+    print(x, y) <1>
+----
+<1> In Python this would print `{1}, {1}`, but given that our arrays are immutable, this would have to print `{0}, {1}`.
+
+Some functional languages such as Haskell use monads to allow in-place mutations, separating this impure part from the rest of the program. However, we cannot allow any impurity, because the original array might be needed during the backward pass of reverse mode AD. Languages such as OCaml have a special syntax for constructing new objects which are modifications of an immutable object (something like `y = {x with x[0] = 2}`). For Myia, there are two options:
+
+. Give `y[i] = x` the semantics of a destructive assignment statement (`y = y with y[i] = x`) instead of mutation. This is clean, but possibly confusing to a user who expects in-place mutation (see example above).
+. Introduce something similar to OCaml's "functional update syntax". More verbose and less standard, but more explicit.
+
+.Myia
+[source,python3]
+----
+@myia
+def f(x):
+    with x as y:
+        y[0] = 2
+        y[2] = 1
+    return y
+----
+
+Note that the same two approaches could be used to let the user construct new named tuples and lists which are slight modifications of existing objects.
+
+=== Control flow
+
+One of the cases in which TensorFlow and Theano's approach becomes particularly awkward is when constructing loops or conditionals. They are metaprogrammed using a higher-order function which takes a Python function representing the loop body or branches as an input.
+
+.TensorFlow
+[source,python3]
+----
+i = constant(0)
+c = lambda i: less(i, 10)
+b = lambda i: add(i, 1)
+r = while_loop(c, b, [i])
+----
+
+While this makes sense in the context of TensorFlow's underlying 'language' being a dataflow graph (and hence, in a way, functional), it also leads to an unnatural way of expressing loops in Python. Most people would prefer the imperative formulation.
+
+.Myia
+[source,python3]
+----
+i = 0
+while i < 10:
+    i += 1 <1>
+----
+<1> Here too there is friction between Python's imperative and Myia's functional nature. The operator `i += 1` should be considered a destructive assignment i.e. it creates a new value `i` whose value is the original `i` plus one.
+
+=== Syntactic sugar: Array construction
+
+We can add a small amount of syntactic sugar to the new language to simplify some common use cases.
+
+For example, in standard Python (i.e. NumPy or operator overloading frameworks) arrays are declared and initialized through object initialization.
+
+.NumPy
+[source,python3]
+----
+x = array([1, 2])
+----
+
+On the other hand, in the metaprogramming approach which TensorFlow and Theano employ a distinction is made between variable declaration and initialization.
+
+.TensorFlow
+[source,python3]
+----
+x = placeholder(float32) <1>
+y = constant([1, 2]) <2>
+
+with tf.Session() as sess:
+    sess.run(x, feed_dict={x: array([1, 2])}) <3>
+----
+<1> `x` is a variable with undefined value (which cannot be done in Python).
+<2> `y` is a constant.
+<3> Variables are initialized when executing the graph.
+
+In many array programming languages arrays are built-in data types. This leads to a minimally verbose initialization.
+
+.MATLAB
+[source,matlab]
+----
+x = [1, 2]
+----
+
+In Myia, we could co-opt Python's set notation to simplify array construction. Syntactic sugar could be added for range construction.
+
+.Myia
+[source,python]
+----
+x = {1, 2}
+y = {10, ..., 20}
+z = {2, 4, ..., 8}
+----
+
+== Type system
+
+Myia is in principal statically typed with support for type inference. However, some type attributes can remain undefined. For example, the shape of a matrix can remain undefined, allowing a function to operate on matrices of different sizes. This means that some type inference must be performed at runtime (gradual typing). The type system is dependent in the sense that the array's dimensionality and shape are part of the type.
+
+=== Type declaration
+
+Although Python's list and set syntaxes allow us to cleanly define vectors (`x = {1, 2, 3}`), they don't easily allow us to specify the floating-point precision, which is necessary for high-performance computing. Python 3 introduced variable type annotations which could be used for this.
+
+.Myia
+[source,python3]
+----
+x: double = {1, 2} <1>
+----
+<1> A vector with double precision (`float64`)
+
+Annotating expressions or arguments with a type can serve as a way of type checking.
+
+.Myia
+[source,python3]
+----
+x: float = 2
+y: float = 3
+z: double = x * y <1>
+----
+<1> This will raise a type error because `x` is inferred to be of type `float` and not `double`.
+
+The same syntax can be used for arbitrary complex types. Python's approach to generic typing is worked out in the https://docs.python.org/3/library/typing.html[`typing`] module.
+
+.Myia
+[source,python3]
+----
+x: Matrix[symmetric=True] = {{2, 1},
+                             {1, 2}}
+----
+
+=== Dependent types
+
+The type system used in Theano and TensorFlow is generally limited to:
+
+* Data type
+* Dimensionality
+* Shape (optional)
+
+Types could be extended to provide further (optional) information that would allow for more efficient kernels to be called, more efficient memory usage, and type safety. For example:
+
+* Bands (triangularity/diagonality)
+* Symmetry
+
+We can defined bands as a pair of integers which define the offsets above and below the diagonal such that (1, -1) and (-1, 1) are upper and lower triangular respectively, (1, 1) is a diagonal matrix, (2, -1) a Hessenberg matrix, (-1, -1) a general matrix, etc. Several of these matrices have specialized matrix storage schemes that can be used by e.g. LAPACK.
+
+Similarly, whether a matrix is symmetric/Hermitian tells us whether we can use specialized BLAS/LAPACK kernels for matrix multiplication, eigenvalue decomposition, etc.
+
+To make functions more general, we can also make the dimensionality of the array an optional attribute.
+
+.Myia
+[source,python3]
+----
+@myia
+def f(x : Array): <1>
+    return sum(x)
+
+@myia
+def g(x: Vector): <2>
+    return sum(x)
+----
+<1> This function will work on any array.
+<2> This function will raise a type error when called with a multidimensional array.
+
+=== JIT type inference
+
+Theano and TensorFlow both perform type inference, but they require the input types to be explicitly declared (e.g. `fvector` in Theano or `placeholder(float64)` in TensorFlow). To avoid this we can postpone compilation until the first time a Myia function is called with data from Python. We can then infer the types from the provided data and use this to perform type inference before compiling the function.
+
+If a Myia function is called with different input types, we can try to compile the function with a supertype of the two types it was called with (gradual pessimization). If that is not possible, we compile different versions of the same function.
+
+.Myia
+[source,python3]
+----
+@myia
+def f(x, y): <1>
+    return x @ y
+
+x = numpy.random.randn(10)
+f(x, x) <2>
+
+y = numpy.random.randn(10, 10)
+f(y, y) <3>
+----
+<1> This Myia function does not have input types defined, so it is not compiled until it is called.
+<2> When `f` is called we know that the types of `x` and `y` are double floating-point vectors and hence `x @ y` is equivalent to `saxpy` and the return type of `f` is a double. The function is compiled and called.
+<3> The function is called again with incompatible types (two matrices). The common supertype for vectors and matrices is the general array class. Hence, `f` is recompiled to perform `@` in general, including broadcasting.
+
+== Concurrency
+
+Concurrency is complicated in machine learning frameworks. We are dealing with many levels of concurrency:
+
+. Array operations are performed in parallel on devices (e.g., using SIMD or CUDA instructions)
+. A single device can perform multiple operations in parallel (e.g., using multiple threads or CUDA streams)
+. Multiple devices can operate in parallel (CPU and any number of GPUs)
+. Separate hosts can work in parallel (distributed computing)
+
+Different levels of concurrency are handled differently by existing frameworks.
+
+. The lowest level of parallelism is often implicit, automatically using SIMD instructions and multiple threads.
+. Performing multiple operations in parallel on a single device is generally not done in TensorFlow and Theano, because the assumption is that a single instruction can saturate the device. This isn't always the case though, which is why e.g. MXNet schedules its operations round-robin style on multiple CUDA streams. PyTorch allows for this kind of parallelism by supporting Python's `multiprocessing` module and providing some primitives in the `nn.parrallel` module.
+. Theano and TensorFlow allow you to associate devices to operations. If data needs to be transferred between devices, this is represented using `Send`/`Receive` or `transfer` nodes in TensorFlow and Theano respectively.
+. Distributed computation is generally supported through separate modules such as Platoon for Theano, `tf.train.Server` for TensorFlow, and `torch.distributed` for PyTorch. These frameworks have different levels of abstraction.
+
+If a language is purely functional we can theoretically parallelize the program automatically. However, in practice we still need to give the user control over both the location of data and execution.
+
+Note however that a single operation could span multiple devices (e.g., NCCL's primitives) and that a single array can be shared by several devices (e.g., multiple CUDA streams can access the same memory). However, we can associate a single device to each operation, and if we do not allow the user to act on the data lock-free (note that this makes implementing HogWild-style algorithms impossible) we can say that each value belongs to a single device at a given time. We can then manage concurrency through message passing (shared memory is much harder to reconcile with a functional language and is more difficult to reason about).
+
+There are several approaches to message passing. Two common ones are communication sequential processes (CSP), which is used by Go, and the actor model, used by languages such as Erlang and Scala. CSP is synchronous whereas the actor model is asynchronous. CSP can be seen as a special case of the actor model with a zero queue size i.e. the message is not sent until the receiver is ready to accept it. However, asynchronous CSP variations exist (e.g., Clojure's async module or Go's buffered channels). The advantage of using channels instead of actors is that they can be naturally typed.
+
+.Myia
+[source,python3]
+----
+@myia
+def f(x):
+    return x * 2
+
+@myia
+def main():
+    spawn(f, ones(10), device=gpu) <1>
+
+@myia
+def f(c, x):
+    send(c, x * 2) <5>
+
+@myia
+def g(c):
+    y = recv(c) <6>
+    return y * 2
+
+@myia
+def main():
+    c = channel(dest=gpu2, buffer=10) <2> <3>
+    spawn(f, c, ones(10), device=gpu1) <4>
+    spawn(g, c, device=gpu2)
+----
+<1> `spawn` launches a function with the given arguments on a particular device. Devices can be virtual as in `cpu:0` and `cpu:1` could refer to launching functions in separate threads. The default behavior of `spawn` is to transfer the arguments to the device that the function is launched on. However, a `spawn_nocopy` function could be introduced which leaves the arguments as is.
+<2> A channel can be used to send and receive messages. Channels can optionally be associated with a destination, in which case any message sent through the channel will be transferred to the memory of that device.
+<3> Similarly to Go the channel can have an optional buffer. By default there is no buffer, which means that the message passing is synchronous.
+<4> Channels are first class values which can be passed as arguments to (potentially multiple) functions.
+<5> Note that channels are typed. By default they send arrays, so trying to send a list or named tuple over them would result in a type error.
+<6> The value `y` was transferred to `gpu2` because of the destination set on the channel, which means that `y * 2` is a valid operation.
+
+== Implementation
+
+=== Automatic differentiation
+
+Automatic differentiation is the study of how to transform a program that performs a numerical computation into a new program which performs a derivative computation (gradient, Hessian, Jacobian-vector product, etc.) It does so by applying the chain rule programmatically to the sequence of elementary arithmetic operations that every program consists of.
+
+==== Forward and reverse mode
+
+Two main modes are used: Forward and reverse mode. Forward mode can be seen as a perturbation of the input, and tracking that perturbation to the output. On the other hand, reverse mode involves perturbing the output and tracking that perturbation back to the input. Forward mode is the efficient choice when there are few inputs, and reverse mode when there are few outputs.
+
+Forward mode is relatively straightforward to implement in practice, since it can be done by simply augmenting each variable with its derivative. The order of evaluation is the same as the order of derivative calculations. For example, forward mode accumulation of stem:[(del f)/(del x) (2, 3)] with stem:[f(x, y) = e^(xy)] proceeds as follows:
+
+[latexmath]
+++++
+\begin{align}
+x &= 2 & \dot{x} &= 1 \\
+y &= 3 & \dot{y} &= 0 \\
+z &= xy & \dot{z} &= \dot{x}y + x\dot{y} \\
+w &= e^z & \dot{w} &= \dot{z}e^{z}
+\end{align}
+++++
+
+Reverse mode is more complex to implement, since it requires reversing the path through the program. Two main approaches exist: Source code transformation (SCT, define-then-run) and operator overloading (OO, define-by-run).
+
+==== Source code transformation and operator overloading
+
+Operator overloading executes the original computation while keeping a trace of the operations performed. It then reverses the execution path by walking this trace (called a _tape_) backwards. Frameworks such as PyTorch, Chainer and Autograd use this approach. The following example illustrates the concept on stem:[y = sin(2x)].
+
+.Myia
+[source,python3]
+----
+TAPE = [] <1>
+
+def f(x):
+    tmp = 2
+    y = tmp * x
+    TAPE.append((mul, ('tmp', 'x'), 'y', (tmp, x)))
+    z = g(y) <2>
+    return z
+
+def g(y):
+    z = sin(y)
+    TAPE.append((sin, ('y',), 'z', (y,)))
+    return z
+
+def df(x):
+    f(x) <3>
+
+    adjoint = {
+        mul: lambda x1, x2: (x2, x1),
+        sin: lambda x: (cos(x),)
+    }
+
+    grad = defaultdict(int)
+    grad['z'] = 1
+
+    for primitive, inputs, output, values in reversed(TAPE):
+        partials = adjoint[primitive](*values)
+        for input, partial in zip(inputs, partials):
+            grad[input] += partial * grad[output] <4>
+
+    return grad['x']
+----
+<1> A single global tape stores a trace of the operations performed and their in- and outputs.
+<2> Only primary operations are stored on the tape i.e. the call tree is flattened into a single linear trace.
+<3> The function is called at runtime to create the trace.
+<4> This is the application of the chain rule.
+
+Source code transformation starts with a representation of the program, and reverse the path through the program ahead of time. In TensorFlow and Theano this representation is a computation graph, but many traditional AD tools such as OpenAD and Tapenade take raw Fortran or C code as input. This program is transformed and a new program which calculates the derivative is returned. Note that generated functions might require intermediate values from the forward pass. These values are usually stored and read from a tape. In TensorFlow and Theano a tape is not explicitly needed, because the entire computation graph exists in the same scope (there are no function calls). However, loops (`while` and `scan` nodes) must be special-cased to store their intermediate variables so that they can be read during the backward pass.
+
+.Myia
+[source,python3]
+----
+TAPE = [] <1>
+
+def f(x):
+    y = 2 * x
+    TAPE.append(y)
+    z = g(y)
+    return z
+
+def g(y):
+    z = sin(y)
+    return z
+
+def df(x, dz):
+    f(x) <2>
+    y = TAPE.pop()
+    dy = dg(y, dz)
+    dx = dy * 2
+    return dx
+
+def dg(y, dz):
+    dy = cos(y) * dz
+    return dy
+----
+<1> SCT also uses a tape, but it is only used to store values on and not the operations performed.
+<2> In this naive example the original functions `f` and `g` are called. However, an SCT approach can determine ahead of time that `z` is not required for the gradient calculation and entirely remove the call to `g`
+
+
+[TIP]
+====
+In the machine learning community it has sometimes been stated that OO (define-by-run) enables "dynamic graphs" which can calculate derivatives of models that SCT (define-then-run) cannot handle. This is false; both methods are equally powerful.
+====
+
+The trade-offs between two approaches are complex. However, the requirement of OO approaches to execute the original function, regardless of whether values are required for the derivative, can be disadvantageous. For this reason, SCT has been considered the golden standard in automatic differentiation research.
+
+.Myia
+[source,python3]
+----
+def f(x, n):
+    for i in range(n):
+        x = x + 1
+    return x
+
+df = grad(f) <1>
+assert df(7, 1e6) == 1
+----
+<1> The gradient is equal to a constant function with value 1. An SCT approach can determine this, and could return a function `df` which runs in constant time. On the other hand, a naive operator overloading approach would run in stem:[O(n)] time.
+
+==== Reverse mode AD in a functional language
+
+Although SCT reverses the control flow of the program ahead of time, there is still a runtime component: A queue is used to store intermediate values for use by the adjoint functions. This complicates static analysis and optimizations, since many rules need to give this tape special consideration. For example, if dead code elimination determines that a push or pop statement can be removed, its corresponding pop or push statement must also be removed. And in order to take higher order derivatives, differentiation rules for this tape are needed. One way of looking at SCT is that the tape used to restore the state of the program so that the adjoint can be executed in the same lexical scope as the original statement.
+
+From a functional programming perspective, we have a more natural tool available to store the state of a program: Closures are records of functions together with an environment. This is the idea explored in cite:[Pearlmutter:2008:RAF:1330017.1330018] and implemented in e.g. http://www.bcl.hamilton.ie/~qobi/stalingrad/[Stalingrad] and derived projects such as https://diffsharp.github.io/DiffSharp/[DiffSharp] and https://github.com/axch/dysvunctional-language[DVL].
+
+The following Python code illustrates the concept of the transformation discussed on p. 17 of cite:[Pearlmutter:2008:RAF:1330017.1330018]. It correctly calculates latexmath:[\frac{d}{dx}\tanh(\exp(x)) = (1 - \tanh^2(\exp(x))) \cdot \exp(x)].
+
+.Myia
+[source,python3]
+----
+def f(x0):
+    x1 = exp(x0)
+    x2 = tanh(x1)
+    return x2
+
+def df(x0_up, x2_down):
+    x1_up = exp(x0_up)
+    def x1_bar(x1_down): <1>
+        return x1_down * x1_up
+
+    x2_up = tanh(x1_up)
+    def x2_bar(x2_down):
+        return x2_down * (1 - x2_up ** 2)
+
+    x0_down = 0 <2>
+    x1_down = 0
+
+    x1_down += x2_bar(x2_down) <3>
+    x0_down += x1_bar(x1_down)
+
+    return x0_down
+----
+<1> Each statement is augmented with the creation of a closure, called a _backpropagator_, which binds to the values it needs for the backward pass (`x1_up` in this case).
+<2> This is the beginning of the backward pass. Initially each partial derivative is zero.
+<3> The backpropagators are now called in reverse order. They are passed the derivative with respect to the output of the original statement.
+
+The main difficulty of this approach lies in dealing with higher order derivatives, which requires taking the derivative with respect to closed over variables. This https://gist.github.com/bartvm/1441575c066d98af9a2fb57d681267e6[notebook] illustrates how this is solved.
+
+Note that the use of closures doesn't magically eliminate the need to store intermediate variables; it simply uses closures as the way of storing them at runtime instead of using a queue. The advantage is that the compiler does not need to give the automatic differentiation code any special consideration, since all the desired optimizations can be handled by general optimizations such as closure elimination, inlining, lambda lifiting, etc.
+
+=== Persistent data structures
+
+https://en.wikipedia.org/wiki/Persistent_data_structure[Persistent data structures] are commonly used in functional programming, and they are a very natural fit for automatic differentiation: During the reverse pass we might need the values from the original forward pass. This means that we need to be able to access any previous version of a data structure (e.g., array or list). This is exactly the functionality which persistent data structures provide.
+
+For lists, we can use linked lists, a traditional persistent data structure used in functional languages.
+
+==== Arrays
+
+We want a persistent array data structure, but we also want to maintain the dense storage pattern that allows fast operations. We note that the mutation pattern of an array is mostly linear, and during backpropagation the old versions are accessed in reverse order. So want a persistent array structure that has quick linear updates, and quick linear reverses. This data structure is described in cite:[Conchon:2007:PUD:1292535.1292541] and exists in Haskell as https://wiki.haskell.org/Arrays#DiffArray_.28module_Data.Array.Diff.29[DiffArray].
+
+The idea is that an array is updated in-place, but that the overwritten entries are stored separately. We end up with a doubly linked tree: Each node is a state of the array, each edge contains data that was overwritten. We can move between states by swapping the overwritten data back in.
+
+****
+It is interesting to note that in the traditional SCT approach, the way that array updates are handled is equivalent: The overwritten entries are stored on the tape and restored during the backward pass.
+****
+
+=== Intermediate representation
+
+Compilers use many different intermediate representations. Traditional compilers such as GCC will usually represent blocks of code as instruction streams (e.g. in RTL or GIMPLE), but represent the control flow (branching and loops) using a graph (the control flow graph, CFG).
+
+Some modern compilers use directed acyclic graphs (DAGs) instead of instruction streams to represent basic blocks of code. The nodes represent instructions and the edges data dependencies. An example of this is the the sea-of-nodes representation used by the https://wiki.openjdk.java.net/display/HotSpot/Compiler[Java HotSpot compiler] and the https://docs.google.com/presentation/d/1Z9iIHojKDrXvZ27gRX51UxHD-bKf1QcPzSijntpMJBM/edit#slide=id.p[TurboFan JavasScript compiler] in Chrome V8. The lack of ordering simplifies certain optimizations and scheduling.
+
+Machine learning frameworks adopted graph representations early on. They are a clean way of representing mathematical relationships. Especially in the absence of memory aliasing and IEEE 754 compliance they are a natural representation on which to apply algebraic simplifications and formula rewriting. These graphs were later extended to support higher-order functions in order to support loops i.e. a graph becomes the input to a node in another graph. When the gradient of such a graph is taken, dependencies arise between these nested graphs (nodes become stateful).
+
+.A while loop in XLA/TensorFlow
+image::https://www.tensorflow.org/versions/r1.1/images/ops_while.png[While loop]
+
+For Myia we would like to use a graph representation, but one with native support for closures and higher-order functions, so that the backpropagator approach to reverse mode AD can be applied naturally. One such intermediate representation is described in cite:[LeiBa:2015:GHI:2738600.2738626].
+
+=== Functions
+
+Most languages have the concept of functions. In TensorFlow and Theano functions exist in the metalanguage, but they do not necessarily correspond to functions in the object language, unless they are passed to higher-order operations such as `while` or `map`, or when explicitly constructed using Theano's `OpFromGraph` or XLA's `ComputationBuilder` primitives. This means that although some advantages of functions are available through the metalangage (e.g. reducing code duplication, enabling code reuse), others are not. In particular, it is not easy to trace a runtime error to a particular function call, and computation graphs might include large amounts of duplicate code. This increases the program size and the amount of duplicate work performed by optimizing passes. In a way, it can be seen as Theano and TensorFlow inlining every function call by default.
+
+.TensorFlow
+[source,python3]
+----
+def plus(x, y):
+    return x + y
+
+x, y = placeholder(float32), placeholder(float32)
+z = plus(x, y) <1>
+----
+<1> In the resulting computation graph there is no trace of the function `plus`.
+
+Eschewing the metaprogramming approach means that functions can naturally become part of the intermediate representation, and inlining can become optional instead of the default.
+
+== Bibliography
+
+bibliography::[]
